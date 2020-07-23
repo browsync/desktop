@@ -1,2 +1,2 @@
-# beta
-Beta version of browsync
+# Browsync Desktop
+Beta version
