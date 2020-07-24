@@ -1,9 +1,16 @@
 const express = require('express')
-const app = 3000
+const app = express()
+const routes = require(`./router`)
+const port = process.env.PORT || 3000
+const cors = require('cors');
 
+app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({extended: false}))
-app.use("/", require("./routes"))
-app.listen(PORT,function(){
-    console.log(`running at port ${PORT}`)
-})
+app.use(routes)
+
+if(process.env.NODE_ENV !== 'test'){
+    app.listen(port,() => {console.log(`listening on port 3000`);})
+}
+
+module.exports = app

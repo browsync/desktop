@@ -1,14 +1,24 @@
 const request = require('supertest')
 const app = require('../app')
+const {hash} = require('../helpers/bcrypt')
+const {sequelize} = require('../models')
+const {queryInterface} = sequelize
+
+let user = {
+    email: 'register@email.com',
+    password: 'password',
+    username: 'admin',
+}
 
 describe('User tests', function(){
+    afterAll((done) => {
+        queryInterface
+        .bulkdelete('Users')
+        .then(()=> done())
+        .catch(err => console.log(err))
+    })
     describe('POST /register', function(){
         it('New user has been registered', function(done){
-            let user = {
-                email: 'test@email.com',
-                password: 'password',
-                username: 'admin',
-            }
             request(app)
             .post('/register')
             .send(user)
@@ -22,10 +32,6 @@ describe('User tests', function(){
     })
     describe('POST /login', function(){
         it('User successfully logged in', function(done){
-            let user = {
-                email: 'test@mail.com',
-                password: 'password'
-            }
             request(app)
             .post('/login')
             .send(user)
@@ -35,11 +41,6 @@ describe('User tests', function(){
                 expect(body).toHaveProperty('message', 'Login successful')
                 done()
             })
-        })
-    })
-    describe('POST /bookmark', function(){
-        it('Bookmark is added', function(done){
-            
         })
     })
 })
