@@ -3,7 +3,7 @@ const {Bookmark, Folder} = require("../models")
 
 class BookmarkController {
 
-    static addBookmark(req, res) {
+    static addBookmark(req, res, next) {
         let bookmark = {
             url: req.body.url,
             FolderId: req.params.id
@@ -13,7 +13,9 @@ class BookmarkController {
             res.status(201).json({message: 'Bookmark has been added'})
         })
         .catch(err => {
-            res.status(500).json(err)
+            // res.status(500).json(err)
+            next({name: err})
+
         })
     }
 
@@ -28,7 +30,8 @@ class BookmarkController {
             res.status(201).json({message: 'Folder has been added'})
         })
         .catch(err => {
-            res.status(500).json(err)
+            // res.status(500).json(err)
+            next({name: err})
         })
     }
 
@@ -46,7 +49,8 @@ class BookmarkController {
             res.status(200).json({data})
         })
         .catch(err => {
-            res.status(500).json(err)
+            // res.status(500).json(err)
+            next({name: err})
         })
     }
 
@@ -56,7 +60,8 @@ class BookmarkController {
             res.status(200).json({message: 'Folder has been deleted'})
         })
         .catch(err => {
-            res.status(500).json(err)
+            // res.status(500).json(err)
+            next({name: err})
         })
     }
 }
