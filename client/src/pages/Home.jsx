@@ -1,18 +1,23 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const { ipcRenderer } = window.require("electron");
 
 export default function Home() {
+  let [historyIndexCurrent, setHistoryIndexCurrent] = useState(0);
+  let [historyIndexLast, setHistoryIndexLast] = useState(0);
+
   const urlSearchBar = useRef(null);
   const initialMount = useRef(true);
 
   useEffect(() => {
-    ipcRenderer.on('browser-history', (event, url) => {
+    ipcRenderer.on('browser-history', (event, history) => {
       if (initialMount.current) {
         initialMount.current = false; 
         return;
       }
-      urlSearchBar.current.value = url;
+      urlSearchBar.current.value = history.urlCurrent;
+      setHistoryIndexCurrent(history.indexCurrent);
+      setHistoryIndexLast(history.indexLast);
     })
   }, [])
 
@@ -31,8 +36,35 @@ export default function Home() {
     }
   }
 
+  const handleGoBack = () => {
+    ipcRenderer.send('go-back');
+  }
+
+  const handleGoForward = () => {
+    ipcRenderer.send('go-forward');
+  }
+
+  const handleGoHome = () => {
+    ipcRenderer.send('go-home');
+  }
+
+  const handleReload = () => {
+    ipcRenderer.send('reload');
+  }
+
   return (
     <div>
+      <button 
+        onClick={() => handleGoBack()}
+        disabled={ historyIndexCurrent === 0 ? true : false }
+        >Back</button>
+      <button 
+        onClick={() => handleGoForward()} 
+        disabled={ historyIndexCurrent === historyIndexLast ? true : false }
+        >Forward</button>
+      <button onClick={() => handleGoHome()}>Home</button>
+      <button onClick={() => handleReload()}>Reload</button>
+
       <form onSubmit={handleSearch}>
         <input ref={urlSearchBar} className={urlSearchBar} type="text" name="url" placeholder="Enter url" />
         <button type="submit" >Search</button>
