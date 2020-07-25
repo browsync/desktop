@@ -22,8 +22,9 @@ function createWindow() {
 
     viewWindow = new BrowserView()
     mainWindow.addBrowserView(viewWindow);
-    viewWindow.setBounds({ x: 0, y: 250, width: 800, height: 1000 })
-    viewWindow.webContents.loadURL('https://google.com') //TODO change to default search engine from config
+
+    viewWindow.setBounds({ x: 0, y: 250, width: 800, height: 1000 }) //TODO VIEW Resize properly & dynamically 
+    viewWindow.webContents.loadURL('https://google.com') //TODO SEARCH ENGINE Change to default search engine from config
     
     viewWindow.webContents.on('did-start-navigation', () => {
         const { history, currentIndex } = viewWindow.webContents;
@@ -74,4 +75,10 @@ ipcMain.on('go-home', () => {
 
 ipcMain.on('reload', () => {
     viewWindow.webContents.reload();
+})
+
+ipcMain.on('new-tab', () => {
+    viewWindow.hide();
+    console.log(BrowserView.getAllViews());
+    console.log(viewWindow.id);
 })

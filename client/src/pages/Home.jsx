@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 const { ipcRenderer } = window.require("electron");
 
 export default function Home() {
+  let [tabId, setTabId] = useState(0);
   let [historyIndexCurrent, setHistoryIndexCurrent] = useState(0);
   let [historyIndexLast, setHistoryIndexLast] = useState(0);
 
@@ -10,6 +11,7 @@ export default function Home() {
   const initialMount = useRef(true);
 
   useEffect(() => {
+    // TODO BOOKMARK Fetch bookmark data from server
     ipcRenderer.on('browser-history', (event, history) => {
       if (initialMount.current) {
         initialMount.current = false; 
@@ -25,7 +27,7 @@ export default function Home() {
     event.preventDefault();
 
     const urlInput = event.target.url.value;
-    const urlFormatted = `http://${urlInput}`;
+    const urlFormatted = `http://${urlInput}`; //TODO SEARCH Check wether user already include http / https or not
     const webUrlRegex = RegExp(/^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z0-9\u00a1-\uffff][a-z0-9\u00a1-\uffff_-]{0,62})?[a-z0-9\u00a1-\uffff]\.)+(?:[a-z\u00a1-\uffff]{2,}\.?))(?::\d{2,5})?(?:[/?#]\S*)?$/i);
 
     if (webUrlRegex.test(urlFormatted)) {
@@ -36,39 +38,50 @@ export default function Home() {
     }
   }
 
-  const handleGoBack = () => {
+  const goBack = () => {
     ipcRenderer.send('go-back');
   }
 
-  const handleGoForward = () => {
+  const goForward = () => {
     ipcRenderer.send('go-forward');
   }
 
-  const handleGoHome = () => {
+  const goHome = () => {
     ipcRenderer.send('go-home');
   }
 
-  const handleReload = () => {
+  const reloadPage = () => {
     ipcRenderer.send('reload');
+  }
+
+  const addToBookmark = () => {
+    console.log("Add to bookmark"); // TODO BOOKMARK Add url to bookmark both local & server
+  }
+
+  const createNewTab = () => {
+    ipcRenderer.send('new-tab');
   }
 
   return (
     <div>
       <button 
-        onClick={() => handleGoBack()}
+        onClick={() => goBack()}
         disabled={ historyIndexCurrent === 0 ? true : false }
         >Back</button>
       <button 
-        onClick={() => handleGoForward()} 
+        onClick={() => goForward()} 
         disabled={ historyIndexCurrent === historyIndexLast ? true : false }
         >Forward</button>
-      <button onClick={() => handleGoHome()}>Home</button>
-      <button onClick={() => handleReload()}>Reload</button>
+      <button onClick={() => goHome()}>Home</button>
+      <button onClick={() => reloadPage()}>Reload</button>
+      
+      <button onClick={() => createNewTab()}>New Tab</button>
 
       <form onSubmit={handleSearch}>
         <input ref={urlSearchBar} className={urlSearchBar} type="text" name="url" placeholder="Enter url" />
         <button type="submit" >Search</button>
       </form>
+      <button onClick={() => addToBookmark()}>Add Bookmark</button>
     </div>
   )
 }
