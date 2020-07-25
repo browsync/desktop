@@ -1,7 +1,21 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react';
+
 const { ipcRenderer } = window.require("electron");
 
 export default function Home() {
+  const urlSearchBar = useRef(null);
+  const initialMount = useRef(true);
+
+  useEffect(() => {
+    ipcRenderer.on('browser-history', (event, url) => {
+      if (initialMount.current) {
+        initialMount.current = false; 
+        return;
+      }
+      urlSearchBar.current.value = url;
+    })
+  }, [])
+
   const handleSearch = (event) => {
     event.preventDefault();
 
@@ -15,13 +29,12 @@ export default function Home() {
       const urlGoogleSearch = 'https://www.google.com/search?q=' + urlInput.replace(/ /g, "+");
       ipcRenderer.send('search-url', urlGoogleSearch);
     }
-    event.target.url.value = '';
   }
 
   return (
     <div>
       <form onSubmit={handleSearch}>
-        <input type="text" name="url" placeholder="Enter url" />
+        <input ref={urlSearchBar} className={urlSearchBar} type="text" name="url" placeholder="Enter url" />
         <button type="submit" >Search</button>
       </form>
     </div>

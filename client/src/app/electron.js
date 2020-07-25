@@ -23,10 +23,15 @@ function createWindow() {
     viewWindow = new BrowserView()
     mainWindow.addBrowserView(viewWindow);
     viewWindow.setBounds({ x: 0, y: 250, width: 800, height: 800 })
-    viewWindow.webContents.loadURL('https://google.com')
+    viewWindow.webContents.loadURL('https://google.com') //TODO change to default search engine from config
+    
+    viewWindow.webContents.on('did-start-navigation', () => {
+        const { history, currentIndex } = viewWindow.webContents;
+        mainWindow.webContents.send('browser-history', history[currentIndex]);
+    })
 
-    mainWindow.webContents.openDevTools();
     mainWindow.on("closed", () => (mainWindow = null));
+    mainWindow.webContents.openDevTools();
 }
 
 app.on("ready", createWindow);
