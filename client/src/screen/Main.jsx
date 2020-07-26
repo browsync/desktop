@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import * as Icon from 'react-feather';
 
 import { createView, updateTab, createTab } from '../utils/actions/browser.action';
 
@@ -17,7 +18,7 @@ export default function Main() {
   useEffect(() => {
     // TODO BOOKMARK Fetch bookmark data from server
     dispatch(createView(1));
-    
+
     ipcRenderer.on('browser-history', (event, tabUpdated) => {
       tabUpdated.viewId = viewSelected.id;
       urlSearchBar.current.value = tabUpdated.urlCurrent;
@@ -34,10 +35,10 @@ export default function Main() {
   //   }
   // }
 
-  const handleSearch = (event) => {
-    event.preventDefault();
+  const handleSearch = () => {
+    // event.preventDefault();
 
-    const urlInput = event.target.url.value;
+    const urlInput = urlSearchBar.current.value;
     const urlFormatted = `http://${urlInput}`; //TODO SEARCH Check wether user already include http / https or not
     const webUrlRegex = RegExp(/^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z0-9\u00a1-\uffff][a-z0-9\u00a1-\uffff_-]{0,62})?[a-z0-9\u00a1-\uffff]\.)+(?:[a-z\u00a1-\uffff]{2,}\.?))(?::\d{2,5})?(?:[/?#]\S*)?$/i);
 
@@ -88,35 +89,48 @@ export default function Main() {
 
   return (
     <div>
-      <button 
-        onClick={() => goBack()}
-        disabled={ tabSelected.indexCurrent === 0 ? true : false }
-        >Back</button>
-      <button 
-        onClick={() => goForward()} 
-        disabled={ tabSelected.indexCurrent === tabSelected.indexLast ? true : false }
-        >Forward</button>
-      <button onClick={() => goHome()}>Home</button>
-      <button onClick={() => reloadPage()}>Reload</button>
-
-      <form style={{ display: 'inline' }} onSubmit={handleSearch}>
-        <input ref={urlSearchBar} style={{ width: 500 }} type="text" name="url" placeholder="Enter url" />
-        <button type="submit" >Search</button>
-      </form>
-      <button style={{ display: 'inline' }} onClick={() => addToBookmark()}>Add Bookmark</button>
-      <button style={{ display: 'block' }} onClick={() => createNewViewWindow()}>New Window</button>
-      
+      <div class="input-group">
+        <div class="input-group-prepend">
+          <button
+            className="btn btn-sm btn-info"
+            onClick={() => goBack()}
+            disabled={tabSelected.indexCurrent === 0 ? true : false}
+          > <Icon.ChevronLeft /> </button>
+          <button
+            className="btn btn-sm btn-info ml-2"
+            onClick={() => goForward()}
+            disabled={tabSelected.indexCurrent === tabSelected.indexLast ? true : false}
+          > <Icon.ChevronRight /> </button>
+          <button className="btn btn-sm btn-info ml-2" onClick={() => goHome()}> <Icon.Home /> </button>
+          <button className="btn btn-sm btn-info ml-2" onClick={() => reloadPage()}> <Icon.RotateCw /> </button>
+        </div>
+        <form style={{ display: 'inline' }} onSubmit={handleSearch}>
+          <input ref={urlSearchBar} style={{ width: 500, height: 35 }} type="text" name="url" placeholder="Enter url" className="form-control ml-2" />
+        </form>
+        <div className="input-group-prepend">
+          <button className="btn btn-sm btn-info" onClick={() => handleSearch()}> <Icon.Search /> </button>
+          <button className="btn btn-sm btn-info  ml-2" style={{ display: 'inline' }} onClick={() => addToBookmark()}> <Icon.Bookmark /> </button>
+          {
+            views.map(view => {
+              return (
+                  <button className="btn btn-sm btn-info  ml-2" onClick={() => createNewTab(view.id)}>New Tab</button>
+              )
+            })
+          }
+          <button className="btn btn-sm btn-info  ml-2" style={{ display: 'block' }} onClick={() => createNewViewWindow()}>New Window</button>
+          
+        </div>
+      </div>
       {
         views.map(view => {
           return (
-            <div key={view.id}>
+            <div key={view.id} className="mb-5">
               {
                 tabs.map(tab => {
-                    return <button key={tab.title} onClick={() => switchTab(view.id, tab.id)}>{ tab.title }</button>
-                  
+                  return <button key={tab.title} onClick={() => switchTab(view.id, tab.id)} className="mb-5">{tab.title}</button>
+
                 })
               }
-              <button onClick={() => createNewTab(view.id)}>New Tab</button>
               <button onClick={() => switchView(view.id)}>Switch View</button>
             </div>
           )
