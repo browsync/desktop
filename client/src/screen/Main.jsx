@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { createView, updateTab, createTab } from '../utils/actions/browser.action';
+import { createView, updateTab, createTab, switchTab } from '../utils/actions/browser.action';
 
 const { ipcRenderer } = window.require("electron");
 
@@ -49,16 +49,19 @@ export default function Main() {
     }
   }
 
-  const createNewTab = (viewId) => {
-    dispatch(createTab(viewId));
+  const handleCreateTab = (viewId) => {
+    dispatch(createTab(viewId)); // TODO VIEW Change to async (ipcRenderer after success) 
     ipcRenderer.send('new-tab', viewId);
   }
 
-  const switchTab = (viewId, tabId) => {
-    console.log(`View ID: ${viewId}, Tab ID: ${tabId}`)
+  const handleSwitchTab = (viewId, tab) => {
+    urlSearchBar.current.value = tab.urlCurrent;
+    dispatch(switchTab(viewId, tab.id));
+    ipcRenderer.send('switch-tab', { viewId, tabId: tab.id });
   }
 
-  const switchView = (viewId) => {
+  const handleSwitchView = (viewId) => {
+
     console.log(`View ID: ${viewId}`)
   }
 
@@ -112,12 +115,12 @@ export default function Main() {
             <div key={view.id}>
               {
                 tabs.map(tab => {
-                    return <button key={tab.title} onClick={() => switchTab(view.id, tab.id)}>{ tab.title }</button>
+                    return <button key={tab.title} onClick={() => handleSwitchTab(view.id, tab)}>{ tab.title }</button>
                   
                 })
               }
-              <button onClick={() => createNewTab(view.id)}>New Tab</button>
-              <button onClick={() => switchView(view.id)}>Switch View</button>
+              <button onClick={() => handleCreateTab(view.id)}>New Tab</button>
+              <button onClick={() => handleSwitchView(view.id)}>Switch View</button>
             </div>
           )
         })

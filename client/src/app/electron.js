@@ -3,13 +3,14 @@ const isDev = require("electron-is-dev");
 const path = require("path");
 
 const MainWindow = require('./main_window');
+const { forEach } = require("lodash");
 
 let searchEngineDefault = 'https://github.com';
 let screen;
 let topBarHeight = 100;
 
 let main;
-let view;
+// let view;
 
 function createMainWindow() {
     screen = display.getPrimaryDisplay().workAreaSize;
@@ -32,7 +33,7 @@ function createMainWindow() {
 }
 
 function createViewWindow() { // TODO Add argument for split screen
-    view = new BrowserView();
+    const view = new BrowserView();
     // view.setAutoResize({ width: true, height: true });
     main.setBrowserView(view); // TODO SPLIT SCREEN addBrowserView instead og set
     resizeViewWindow(); 
@@ -60,6 +61,19 @@ function resizeViewWindow() {
             height: screen.height - topBarHeight,
         }) //TODO VIEW Resize properly & dynamically 
     })
+}
+
+function switchViewWindow(viewId, tabId) {
+    const views = main.getBrowserViews();
+    const tabs = BrowserView.getAllViews();
+    const tabSelected = tabs.find(tab => tab.id === tabId); 
+    views.forEach(view => {
+        main.removeBrowserView(view);
+    });
+    views.splice(viewId - 1, 1, tabSelected);
+    views.forEach(view => {
+        main.addBrowserView(view);
+    });
 }
 
 app.on("ready", createMainWindow);
@@ -100,8 +114,10 @@ ipcMain.on('reload', () => {
     view.webContents.reload();
 })
 
-ipcMain.on('new-tab', (event, viewId) => {
+ipcMain.on('new-tab', () => {
     createViewWindow();
-    // console.log(BrowserView.getAllViews());
-    // console.log(view.id);
+})
+
+ipcMain.on('switch-tab', (event, { viewId, tabId }) => {
+    switchViewWindow(viewId, tabId);
 })
