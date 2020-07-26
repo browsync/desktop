@@ -1,0 +1,1 @@
+export { default as browserReducer } from './browser.reducer';
