@@ -115,7 +115,7 @@ export default function Main() {
             <div key={view.id}>
               {
                 tabs.map(tab => {
-                    return <button key={tab.title} onClick={() => handleSwitchTab(view.id, tab)}>{ tab.title }</button>
+                    return <button disabled={tabSelected.id === tab.id ? true : false} key={tab.title} onClick={() => handleSwitchTab(view.id, tab)}>{ tab.title }</button>
                   
                 })
               }
