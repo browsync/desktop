@@ -33,16 +33,16 @@ function createMainWindow() {
 }
 
 function createViewWindow() { // TODO Add argument for split screen
-    const view = new BrowserView();
+    const tab = new BrowserView();
     // view.setAutoResize({ width: true, height: true });
-    main.setBrowserView(view); // TODO SPLIT SCREEN addBrowserView instead og set
-    resizeViewWindow(); 
-    view.webContents.loadURL(searchEngineDefault) //TODO SEARCH ENGINE Change to default search engine from config
+    main.setBrowserView(tab); // TODO SPLIT SCREEN addBrowserView instead og set
+    resizeViewWindow(tab); 
+    tab.webContents.loadURL(searchEngineDefault) //TODO SEARCH ENGINE Change to default search engine from config
     
-    view.webContents.on('navigation-entry-commited', () => {
-        const { history, currentIndex } = view.webContents;
+    tab.webContents.on('navigation-entry-commited', () => {
+        const { history, currentIndex } = tab.webContents;
         main.webContents.send('browser-history', {
-            id: view.id,
+            id: tab.id,
             urlCurrent: history[currentIndex],
             indexCurrent: currentIndex,
             indexLast: history.length - 1,
@@ -51,8 +51,7 @@ function createViewWindow() { // TODO Add argument for split screen
 }
 
 function resizeViewWindow() {
-    const views = [main.getBrowserView()];
-    // const views = BrowserView.getAllViews();
+    const views = main.getBrowserViews();
     views.map((view, idx) => {
         view.setBounds({ 
             x: (screen.width / views.length) * idx,
@@ -65,8 +64,7 @@ function resizeViewWindow() {
 
 function switchViewWindow(viewId, tabId) {
     const views = main.getBrowserViews();
-    const tabs = BrowserView.getAllViews();
-    const tabSelected = tabs.find(tab => tab.id === tabId); 
+    const tabSelected = findTab(tabId); 
     views.forEach(view => {
         main.removeBrowserView(view);
     });
@@ -74,6 +72,12 @@ function switchViewWindow(viewId, tabId) {
     views.forEach(view => {
         main.addBrowserView(view);
     });
+}
+
+function findTab(tabId) {
+    const tabs = BrowserView.getAllViews();
+    const tabSelected = tabs.find(tab => tab.id === tabId);
+    return tabSelected;
 }
 
 app.on("ready", createMainWindow);
@@ -90,34 +94,39 @@ app.on("activate", () => {
     }
 });
 
-ipcMain.on('search-url', (event, url) => {
-    view.webContents.loadURL(url);
-})
-
-ipcMain.on('go-back', () => {
-    if (view.webContents.canGoBack()) {
-        return view.webContents.goBack();
-    }
-})
-
-ipcMain.on('go-forward', () => {
-    if (view.webContents.canGoForward()){
-        view.webContents.goForward();
-    }
-})
-
-ipcMain.on('go-home', () => {
-    view.webContents.goToIndex(0);
-})
-
-ipcMain.on('reload', () => {
-    view.webContents.reload();
+ipcMain.on('search-url', (_, { tabId, url }) => {
+    const tabSelected = findTab(tabId);
+    tabSelected.webContents.loadURL(url);
 })
 
 ipcMain.on('new-tab', () => {
     createViewWindow();
 })
 
-ipcMain.on('switch-tab', (event, { viewId, tabId }) => {
+ipcMain.on('switch-tab', (_, { viewId, tabId }) => {
     switchViewWindow(viewId, tabId);
+})
+
+ipcMain.on('go-back', (_, { tabId }) => {
+    const tabSelected = findTab(tabId);
+    if (tabSelected.webContents.canGoBack()) {
+        return tabSelected.webContents.goBack();
+    }
+})
+
+ipcMain.on('go-forward', (_, { tabId }) => {
+    const tabSelected = findTab(tabId);
+    if (tabSelected.webContents.canGoForward()){
+        tabSelected.webContents.goForward();
+    }
+})
+
+ipcMain.on('go-home', (_, { tabId }) => {
+    const tabSelected = findTab(tabId);
+    tabSelected.webContents.goToIndex(0);
+})
+
+ipcMain.on('reload', (_, { tabId }) => {
+    const tabSelected = findTab(tabId);
+    tabSelected.webContents.reload();
 })

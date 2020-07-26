@@ -42,16 +42,16 @@ export default function Main() {
     const webUrlRegex = RegExp(/^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z0-9\u00a1-\uffff][a-z0-9\u00a1-\uffff_-]{0,62})?[a-z0-9\u00a1-\uffff]\.)+(?:[a-z\u00a1-\uffff]{2,}\.?))(?::\d{2,5})?(?:[/?#]\S*)?$/i);
 
     if (webUrlRegex.test(urlFormatted)) {
-      ipcRenderer.send('search-url', urlFormatted);
+      ipcRenderer.send('search-url', { tabId: tabSelected.id, url: urlFormatted });
     } else {
       const urlGoogleSearch = 'https://www.google.com/search?q=' + urlInput.replace(/ /g, "+");
-      ipcRenderer.send('search-url', urlGoogleSearch);
+      ipcRenderer.send('search-url', { tabId: tabSelected.id, url: urlGoogleSearch });
     }
   }
 
   const handleCreateTab = (viewId) => {
     dispatch(createTab(viewId)); // TODO VIEW Change to async (ipcRenderer after success) 
-    ipcRenderer.send('new-tab', viewId);
+    ipcRenderer.send('new-tab');
   }
 
   const handleSwitchTab = (viewId, tab) => {
@@ -60,25 +60,24 @@ export default function Main() {
     ipcRenderer.send('switch-tab', { viewId, tabId: tab.id });
   }
 
-  const handleSwitchView = (viewId) => {
-
+  const handleSwitchView = (viewId) => { // TODO VIEW Handle view switch focus; 
     console.log(`View ID: ${viewId}`)
   }
 
   const goBack = () => {
-    ipcRenderer.send('go-back');
+    ipcRenderer.send('go-back', { tabId: tabSelected.id });
   }
 
   const goForward = () => {
-    ipcRenderer.send('go-forward');
+    ipcRenderer.send('go-forward', { tabId: tabSelected.id });
   }
 
   const goHome = () => {
-    ipcRenderer.send('go-home');
+    ipcRenderer.send('go-home', { tabId: tabSelected.id });
   }
 
   const reloadPage = () => {
-    ipcRenderer.send('reload');
+    ipcRenderer.send('reload', { tabId: tabSelected.id });
   }
 
   const addToBookmark = () => {
@@ -86,7 +85,7 @@ export default function Main() {
   }
 
   const createNewViewWindow = () => {
-    ipcRenderer.send('new-viewWindow');
+    ipcRenderer.send('new-view');
   }
 
   return (
@@ -115,7 +114,7 @@ export default function Main() {
             <div key={view.id}>
               {
                 tabs.map(tab => {
-                    return <button disabled={tabSelected.id === tab.id ? true : false} key={tab.title} onClick={() => handleSwitchTab(view.id, tab)}>{ tab.title }</button>
+                    return <button disabled={tabSelected.id === tab.id ? true : false} key={tab.id} onClick={() => handleSwitchTab(view.id, tab)}>{ tab.title }</button>
                   
                 })
               }
