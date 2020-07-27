@@ -1,13 +1,17 @@
 const { app, BrowserView, ipcMain, screen: display } = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
+const findIndex = require('lodash/findIndex');
 
 const MainWindow = require('./main_window');
+const ViewWindow = require('./view_window');
 
 let searchEngineDefault = 'https://github.com';
 let screen;
-let topBarHeight = 400;
+let topBarHeight = 50;
 let main;
+let isViewCreated;
+let isTabCreated;
 
 (setupApp = () => {
     app.on("ready", createMain);
@@ -37,68 +41,91 @@ function createMain() {
         : `file://${path.join(__dirname, "../build/index.html")}`
     );
     
-    createTab(1);
+    // main.webContents.openDevTools();
     main.on("closed", () => (main = null));
 }
 
 function createTab(viewId) { // TODO Add argument for split screen
-    const tabNew = new BrowserView(); // TODO CLASS Create class 
-    tabNew.webContents.loadURL(searchEngineDefault) //TODO SEARCH ENGINE Change to default search engine from config
+    const tabNew = new ViewWindow(viewId);
+    tabNew.webContents.loadURL(searchEngineDefault); //TODO SEARCH ENGINE Change to default search engine from config
     updateViews(viewId, tabNew);
     resizeViews();
+
+    isTabCreated = true;
     
     tabNew.webContents.on('navigation-entry-commited', () => {
         const { history, currentIndex } = tabNew.webContents;
-        main.webContents.send('browser-history', {
+        const payload = {
             id: tabNew.id,
+            viewId: viewId,
             urlCurrent: history[currentIndex],
             indexCurrent: currentIndex,
             indexLast: history.length - 1,
-        });
+        }
+        if (isTabCreated) {
+            main.webContents.send('new-tab-resp', payload);
+            isTabCreated = false;
+        } else {
+            main.webContents.send('tab-history', payload);
+        }
     })
 }
 
 function switchTab(viewId, tabId) {
-    const tabSelected = findTab(tabId);
-    updateViews(viewId, tabSelected);
+    const tabActive = findTab(tabId);
+    updateViews(viewId, tabActive);
 }
 
-function createView(){
-    // here tab mean view
-    const tabNew = new BrowserView(); // TODO CLASS Create class 
-    tabNew.webContents.loadURL(searchEngineDefault) //TODO SEARCH ENGINE Change to default search engine from config
-    // updateViews(viewId, tabNew);
-    main.addBrowserView(tabNew);
+function createView() {
+    const viewNew = new ViewWindow();
+    viewNew.webContents.loadURL(searchEngineDefault); // TODO SEARCH ENGINE Change to default search engine from config
+    main.addBrowserView(viewNew);
+
+    const views = main.getBrowserViews();
+    const viewActiveIndex = findIndex(views, { id: viewNew.id });
+    viewNew.setViewId(viewActiveIndex);
+
     resizeViews();
-    
-    tabNew.webContents.on('navigation-entry-commited', () => {
-        const { history, currentIndex } = tabNew.webContents;
-        main.webContents.send('browser-history', {
-            id: tabNew.id,
+
+    isViewCreated = true;
+
+    viewNew.webContents.on('navigation-entry-commited', () => {
+        const views = main.getBrowserViews();
+        const viewActiveIndex = findIndex(views, { id: viewNew.id });
+        const { history, currentIndex } = viewNew.webContents;
+        const payload = {
+            id: viewNew.id,
+            viewId: viewActiveIndex,
             urlCurrent: history[currentIndex],
             indexCurrent: currentIndex,
             indexLast: history.length - 1,
-        });
-        console.log(main.webContents);
+        };
+        if (isViewCreated) {
+            main.webContents.send('new-view-resp', payload);
+            isViewCreated = false;
+        } else {
+            main.webContents.send('tab-history', payload);
+        }
     })
 }
 
 function resizeViews() {
     const views = main.getBrowserViews();
-    views.map((view, idx) => {
-        view.setBounds({ 
-            x: (screen.width / views.length) * idx,
+    const tabs = BrowserView.getAllViews();
+    tabs.map(tab => {
+        tab.setBounds({ 
+            x: (screen.width / views.length) * tab.viewId,
             y: topBarHeight,
             width: screen.width / views.length,
             height: screen.height - topBarHeight,
-        }) //TODO VIEW Resize properly & dynamically 
+        })
     })
 }
 
 function findTab(tabId) {
     const tabs = BrowserView.getAllViews();
-    const tabSelected = tabs.find(tab => tab.id === tabId);
-    return tabSelected;
+    const tabActive = tabs.find(tab => tab.id === tabId);
+    return tabActive;
 }
 
 function updateViews(viewId, tabInserted) {
@@ -108,15 +135,16 @@ function updateViews(viewId, tabInserted) {
             main.removeBrowserView(view);
         });
     }
-    views.splice(viewId - 1, 1, tabInserted);
+    
+    views.splice(viewId, 1, tabInserted);
     views.forEach(view => {
         main.addBrowserView(view);
     });
 }
 
 ipcMain.on('search-url', (_, { tabId, url }) => {
-    const tabSelected = findTab(tabId);
-    tabSelected.webContents.loadURL(url);
+    const tabActive = findTab(tabId);
+    tabActive.webContents.loadURL(url);
 })
 
 ipcMain.on('new-tab', (_, { viewId }) => {
@@ -132,25 +160,25 @@ ipcMain.on('new-view', () => {
 })
 
 ipcMain.on('go-back', (_, { tabId }) => {
-    const tabSelected = findTab(tabId);
-    if (tabSelected.webContents.canGoBack()) {
-        return tabSelected.webContents.goBack();
+    const tabActive = findTab(tabId);
+    if (tabActive.webContents.canGoBack()) {
+        return tabActive.webContents.goBack();
     }
 })
 
 ipcMain.on('go-forward', (_, { tabId }) => {
-    const tabSelected = findTab(tabId);
-    if (tabSelected.webContents.canGoForward()){
-        tabSelected.webContents.goForward();
+    const tabActive = findTab(tabId);
+    if (tabActive.webContents.canGoForward()){
+        tabActive.webContents.goForward();
     }
 })
 
 ipcMain.on('go-home', (_, { tabId }) => {
-    const tabSelected = findTab(tabId);
-    tabSelected.webContents.goToIndex(0);
+    const tabActive = findTab(tabId);
+    tabActive.webContents.goToIndex(0);
 })
 
 ipcMain.on('reload', (_, { tabId }) => {
-    const tabSelected = findTab(tabId);
-    tabSelected.webContents.reload();
+    const tabActive = findTab(tabId);
+    tabActive.webContents.reload();
 })

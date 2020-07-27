@@ -1,7 +1,7 @@
-export function createView(id) {
+export function createView(viewNew) {
   return ({
     type: 'CREATE_VIEW',
-    payload: { id },
+    payload: viewNew,
   })
 }
 
@@ -9,7 +9,7 @@ export function updateTab(tabUpdated) {
   return (
     async (dispatch, getState) => {
       try {
-        tabUpdated.viewId = getState().browser.viewSelected.id;
+        tabUpdated.viewId = getState().browser.viewActive.id;
         tabUpdated.title = `tab-${tabUpdated.viewId}.${tabUpdated.id}`;
         dispatch({
           type: 'UPDATE_TAB',
@@ -22,10 +22,10 @@ export function updateTab(tabUpdated) {
   )
 }
 
-export function createTab(viewId) {
+export function createTab(tab) {
   return ({
     type: 'CREATE_TAB',
-    payload: { viewId },
+    payload: tab,
   })
 }
 
@@ -35,3 +35,10 @@ export function switchTab(viewId, tabId) {
     payload: { viewId, tabId },
   })
 }
+
+// export function setActiveView(viewId, tabId) {
+//   return ({
+//     type: 'SWITCH_TAB',
+//     payload: { viewId, tabId },
+//   })
+// }
