@@ -14,6 +14,7 @@ router.use(Auth.auth)
 
 router.get('/folder',BookmarkControllers.showFolder)
 router.post("/folder", BookmarkControllers.addFolder)
+router.get("/folder/:id", BookmarkControllers.showOneFolder)
 router.post("/bookmark/:id", BookmarkControllers.addBookmark)
 router.delete("/folder/:id", BookmarkControllers.deleteFolder)
 

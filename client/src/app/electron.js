@@ -39,6 +39,8 @@ function createMain() {
     
     createTab(1);
     main.on("closed", () => (main = null));
+      
+    main.webContents.openDevTools()
 }
 
 function createTab(viewId) { // TODO Add argument for split screen
@@ -89,7 +91,7 @@ function resizeViews() {
         view.setBounds({ 
             x: (screen.width / views.length) * idx,
             y: topBarHeight,
-            width: screen.width / views.length,
+            width: 300,
             height: screen.height - topBarHeight,
         }) //TODO VIEW Resize properly & dynamically 
     })

@@ -19,11 +19,11 @@ class BookmarkController {
         })
     }
 
-    static addFolder(req, res) {
+    static addFolder(req, res, next) {
         let folder = {
             name: req.body.name,
             UserId: req.userData.id,
-            FolderId: req.query.id
+            FolderId: req.query.id || null
         }
         Folder.create(folder)
         .then(data => {
@@ -35,7 +35,7 @@ class BookmarkController {
         })
     }
 
-    static showFolder(req, res) {
+    static showFolder(req, res, next) {
         Folder.findAll({
             include:{
                 model: Folder,
@@ -54,7 +54,26 @@ class BookmarkController {
         })
     }
 
-    static deleteFolder(req, res) {
+    static showOneFolder(req, res, next) {
+        Folder.findByPk(req.params.id,{
+            include:{
+                model: Folder,
+                as: 'Child'
+            },
+            where:{
+                UserId: req.userData.id
+            }
+        })
+        .then(data => {
+            res.status(200).json({data})
+        })
+        .catch(err => {
+            // res.status(500).json(err)
+            next({name: err})
+        })
+    }
+
+    static deleteFolder(req, res, next) {
         Folder.destroy({where:{id: req.params.id}})
         .then(res => {
             res.status(200).json({message: 'Folder has been deleted'})

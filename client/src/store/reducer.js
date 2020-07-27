@@ -1,6 +1,6 @@
 
 const initialState = {
-    userData: [],
+    userData: {},
     bookmarkData: []
 }
 
@@ -9,7 +9,7 @@ export default (state=initialState, action) => {
         case "ADD_USER" :
             return {
                 ...state,
-                userData: state.userData.concat(action.payload.newUser)
+                userData: state.userData.concat(action.payload.User)
             }
         case "ADD_BOOKMARK" : 
         return {
