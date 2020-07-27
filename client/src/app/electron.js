@@ -3,16 +3,25 @@ const isDev = require("electron-is-dev");
 const path = require("path");
 
 const MainWindow = require('./main_window');
-const { forEach } = require("lodash");
 
 let searchEngineDefault = 'https://github.com';
 let screen;
 let topBarHeight = 100;
-
 let main;
-// let view;
 
-function createMainWindow() {
+app.on("ready", createMain);
+app.on("window-all-closed", () => {
+    if (process.platform !== "darwin") {
+        app.quit();
+    }
+});
+app.on("activate", () => {
+    if (main === null) {
+        createMain();
+    }
+});
+
+function createMain() {
     screen = display.getPrimaryDisplay().workAreaSize;
 
     main = new MainWindow({ 
@@ -26,23 +35,21 @@ function createMainWindow() {
         : `file://${path.join(__dirname, "../build/index.html")}`
     );
     
-    createViewWindow();
-
+    createTab(1);
     main.on("closed", () => (main = null));
     main.webContents.openDevTools();
 }
 
-function createViewWindow() { // TODO Add argument for split screen
-    const tab = new BrowserView();
-    // view.setAutoResize({ width: true, height: true });
-    main.setBrowserView(tab); // TODO SPLIT SCREEN addBrowserView instead og set
-    resizeViewWindow(tab); 
-    tab.webContents.loadURL(searchEngineDefault) //TODO SEARCH ENGINE Change to default search engine from config
+function createTab(viewId) { // TODO Add argument for split screen
+    const tabNew = new BrowserView(); // TODO CLASS Create class 
+    tabNew.webContents.loadURL(searchEngineDefault) //TODO SEARCH ENGINE Change to default search engine from config
+    updateViews(viewId, tabNew);
+    resizeViews();
     
-    tab.webContents.on('navigation-entry-commited', () => {
-        const { history, currentIndex } = tab.webContents;
+    tabNew.webContents.on('navigation-entry-commited', () => {
+        const { history, currentIndex } = tabNew.webContents;
         main.webContents.send('browser-history', {
-            id: tab.id,
+            id: tabNew.id,
             urlCurrent: history[currentIndex],
             indexCurrent: currentIndex,
             indexLast: history.length - 1,
@@ -50,7 +57,7 @@ function createViewWindow() { // TODO Add argument for split screen
     })
 }
 
-function resizeViewWindow() {
+function resizeViews() {
     const views = main.getBrowserViews();
     views.map((view, idx) => {
         view.setBounds({ 
@@ -62,16 +69,9 @@ function resizeViewWindow() {
     })
 }
 
-function switchViewWindow(viewId, tabId) {
-    const views = main.getBrowserViews();
-    const tabSelected = findTab(tabId); 
-    views.forEach(view => {
-        main.removeBrowserView(view);
-    });
-    views.splice(viewId - 1, 1, tabSelected);
-    views.forEach(view => {
-        main.addBrowserView(view);
-    });
+function switchTab(viewId, tabId) {
+    const tabSelected = findTab(tabId);
+    updateViews(viewId, tabSelected);
 }
 
 function findTab(tabId) {
@@ -80,31 +80,30 @@ function findTab(tabId) {
     return tabSelected;
 }
 
-app.on("ready", createMainWindow);
-
-app.on("window-all-closed", () => {
-    if (process.platform !== "darwin") {
-        app.quit();
+function updateViews(viewId, tabInserted) {
+    const views = main.getBrowserViews();
+    if (views.length > 0) {
+        views.forEach(view => {
+            main.removeBrowserView(view);
+        });
     }
-});
-
-app.on("activate", () => {
-    if (main === null) {
-        createMainWindow();
-    }
-});
+    views.splice(viewId - 1, 1, tabInserted);
+    views.forEach(view => {
+        main.addBrowserView(view);
+    });
+}
 
 ipcMain.on('search-url', (_, { tabId, url }) => {
     const tabSelected = findTab(tabId);
     tabSelected.webContents.loadURL(url);
 })
 
-ipcMain.on('new-tab', () => {
-    createViewWindow();
+ipcMain.on('new-tab', (_, { viewId }) => {
+    createTab(viewId);
 })
 
 ipcMain.on('switch-tab', (_, { viewId, tabId }) => {
-    switchViewWindow(viewId, tabId);
+    switchTab(viewId, tabId);
 })
 
 ipcMain.on('go-back', (_, { tabId }) => {

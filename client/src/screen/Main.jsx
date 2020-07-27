@@ -11,7 +11,6 @@ export default function Main() {
   const tabs = useSelector(state => state.browser.tabs);
   const viewSelected = useSelector(state => state.browser.viewSelected);
   const tabSelected = useSelector(state => state.browser.tabSelected);
-
   const urlSearchBar = useRef(null);
 
   useEffect(() => {
@@ -22,17 +21,8 @@ export default function Main() {
       tabUpdated.viewId = viewSelected.id;
       urlSearchBar.current.value = tabUpdated.urlCurrent;
       dispatch(updateTab(tabUpdated));
-      // if (isInitialMount()) urlSearchBar.current.value = '';
     })
   }, [])
-
-  // const initialMount = useRef(true);
-  // const isInitialMount = () => {
-  //   if (initialMount.current) {
-  //     initialMount.current = false; 
-  //     return true;
-  //   }
-  // }
 
   const handleSearch = (event) => {
     event.preventDefault();
@@ -51,13 +41,17 @@ export default function Main() {
 
   const handleCreateTab = (viewId) => {
     dispatch(createTab(viewId)); // TODO VIEW Change to async (ipcRenderer after success) 
-    ipcRenderer.send('new-tab');
+    ipcRenderer.send('new-tab', { viewId });
   }
 
   const handleSwitchTab = (viewId, tab) => {
     urlSearchBar.current.value = tab.urlCurrent;
     dispatch(switchTab(viewId, tab.id));
     ipcRenderer.send('switch-tab', { viewId, tabId: tab.id });
+  }
+
+  const createNewViewWindow = () => {
+    ipcRenderer.send('new-view');
   }
 
   const handleSwitchView = (viewId) => { // TODO VIEW Handle view switch focus; 
@@ -82,10 +76,6 @@ export default function Main() {
 
   const addToBookmark = () => {
     console.log("Add to bookmark"); // TODO BOOKMARK Add url to bookmark both local & server
-  }
-
-  const createNewViewWindow = () => {
-    ipcRenderer.send('new-view');
   }
 
   return (
