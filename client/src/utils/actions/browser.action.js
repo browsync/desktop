@@ -6,20 +6,10 @@ export function createView(viewNew) {
 }
 
 export function updateTab(tabUpdated) {
-  return (
-    async (dispatch, getState) => {
-      try {
-        tabUpdated.viewId = getState().browser.viewActive.id;
-        tabUpdated.title = `tab-${tabUpdated.viewId}.${tabUpdated.id}`;
-        dispatch({
-          type: 'UPDATE_TAB',
-          payload: tabUpdated,
-        })
-      } catch(err) {
-        console.log(err.message)
-      }
-    }
-  )
+  return ({
+    type: 'UPDATE_TAB',
+    payload: tabUpdated,
+  })
 }
 
 export function createTab(tab) {

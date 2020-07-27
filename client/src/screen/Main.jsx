@@ -1,8 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { createView, updateTab, createTab, switchTab, setActiveView } from '../utils/actions/browser.action';
-import { findLastIndex } from 'lodash';
+import { createView, updateTab, createTab, switchTab } from '../utils/actions/browser.action';
 
 const { ipcRenderer } = window.require("electron");
 
@@ -10,28 +9,31 @@ export default function Main() {
   const dispatch = useDispatch();
   const views = useSelector(state => state.browser.views);
   const tabs = useSelector(state => state.browser.tabs);
-  const viewActive = useSelector(state => state.browser.viewActive);
   const tabActive = useSelector(state => state.browser.tabActive);
   const urlSearchBar = useRef(null);
 
   useEffect(() => {
-    // TODO BOOKMARK Fetch bookmark data from server
+    // TODO BOOKMARK Fetch
     ipcRenderer.send('new-view');
 
-    ipcRenderer.on('tab-history', (event, tabUpdated) => {
-      tabUpdated.viewId = viewActive.id;
+    ipcRenderer.on('tab-history', (_, tabUpdated) => {
       urlSearchBar.current.value = tabUpdated.urlCurrent;
+      urlSearchBar.current.focus();
+      urlSearchBar.current.select();
       dispatch(updateTab(tabUpdated));
     })
 
-    ipcRenderer.on('new-view-resp', (event, viewNew) => {
+    ipcRenderer.on('new-view-resp', (_, viewNew) => {
+      urlSearchBar.current.value = '';
+      urlSearchBar.current.focus();
       dispatch(createView(viewNew));
     })
 
-    ipcRenderer.on('new-tab-resp', (event, tabNew) => {
+    ipcRenderer.on('new-tab-resp', (_, tabNew) => {
+      urlSearchBar.current.value = '';
+      urlSearchBar.current.focus();
       dispatch(createTab(tabNew));
     })
-
   }, [])
 
   const handleSearch = (event) => {
@@ -49,18 +51,20 @@ export default function Main() {
     }
   }
 
+  const handleCreateView = () => {
+    ipcRenderer.send('new-view');
+  }
+
   const handleCreateTab = (viewId) => {
     ipcRenderer.send('new-tab', { viewId });
   }
 
   const handleSwitchTab = (viewId, tab) => {
     urlSearchBar.current.value = tab.urlCurrent;
+    urlSearchBar.current.focus();
+    urlSearchBar.current.select();
     dispatch(switchTab(viewId, tab.id));
     ipcRenderer.send('switch-tab', { viewId, tabId: tab.id });
-  }
-
-  const handleCreateView = () => {
-    ipcRenderer.send('new-view');
   }
 
   const goBack = () => {
@@ -80,7 +84,7 @@ export default function Main() {
   }
 
   const addToBookmark = () => {
-    console.log("Add to bookmark"); // TODO BOOKMARK Add url to bookmark both local & server
+    console.log("Add to bookmark"); // TODO BOOKMARK Add
   }
 
   return (

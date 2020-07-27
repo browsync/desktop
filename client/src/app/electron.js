@@ -2,6 +2,7 @@ const { app, BrowserView, ipcMain, screen: display } = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
 const findIndex = require('lodash/findIndex');
+const sortBy = require('lodash/sortBy');
 
 const MainWindow = require('./main_window');
 const ViewWindow = require('./view_window');
@@ -45,47 +46,17 @@ function createMain() {
     main.on("closed", () => (main = null));
 }
 
-function createTab(viewId) { // TODO Add argument for split screen
-    const tabNew = new ViewWindow(viewId);
-    tabNew.webContents.loadURL(searchEngineDefault); //TODO SEARCH ENGINE Change to default search engine from config
-    updateViews(viewId, tabNew);
-    resizeViews();
-
-    isTabCreated = true;
-    
-    tabNew.webContents.on('navigation-entry-commited', () => {
-        const { history, currentIndex } = tabNew.webContents;
-        const payload = {
-            id: tabNew.id,
-            viewId: viewId,
-            urlCurrent: history[currentIndex],
-            indexCurrent: currentIndex,
-            indexLast: history.length - 1,
-        }
-        if (isTabCreated) {
-            main.webContents.send('new-tab-resp', payload);
-            isTabCreated = false;
-        } else {
-            main.webContents.send('tab-history', payload);
-        }
-    })
-}
-
-function switchTab(viewId, tabId) {
-    const tabActive = findTab(tabId);
-    updateViews(viewId, tabActive);
-}
-
 function createView() {
     const viewNew = new ViewWindow();
-    viewNew.webContents.loadURL(searchEngineDefault); // TODO SEARCH ENGINE Change to default search engine from config
     main.addBrowserView(viewNew);
 
     const views = main.getBrowserViews();
     const viewActiveIndex = findIndex(views, { id: viewNew.id });
     viewNew.setViewId(viewActiveIndex);
 
-    resizeViews();
+    viewNew.webContents.loadURL(searchEngineDefault).then(() => {
+        resizeViews();
+    });
 
     isViewCreated = true;
 
@@ -122,12 +93,6 @@ function resizeViews() {
     })
 }
 
-function findTab(tabId) {
-    const tabs = BrowserView.getAllViews();
-    const tabActive = tabs.find(tab => tab.id === tabId);
-    return tabActive;
-}
-
 function updateViews(viewId, tabInserted) {
     const views = main.getBrowserViews();
     if (views.length > 0) {
@@ -135,12 +100,54 @@ function updateViews(viewId, tabInserted) {
             main.removeBrowserView(view);
         });
     }
-    
-    views.splice(viewId, 1, tabInserted);
-    views.forEach(view => {
+    const viewsSorted = sortBy(views, ['viewId']);
+    viewsSorted.splice(viewId, 1, tabInserted); // sort
+    viewsSorted.forEach(view => {
         main.addBrowserView(view);
     });
 }
+
+function createTab(viewId) { 
+    const tabNew = new ViewWindow(viewId);
+    tabNew.webContents.loadURL(searchEngineDefault).then(() => {
+        updateViews(viewId, tabNew);
+        resizeViews();
+    })
+    
+    isTabCreated = true;
+    
+    tabNew.webContents.on('navigation-entry-commited', () => {
+        const { history, currentIndex } = tabNew.webContents;
+        const payload = {
+            id: tabNew.id,
+            viewId: viewId,
+            urlCurrent: history[currentIndex],
+            indexCurrent: currentIndex,
+            indexLast: history.length - 1,
+        }
+        if (isTabCreated) {
+            main.webContents.send('new-tab-resp', payload);
+            isTabCreated = false;
+        } else {
+            main.webContents.send('tab-history', payload);
+        }
+    })
+}
+
+function switchTab(viewId, tabId) {
+    const tabActive = findTab(tabId, viewId);
+    updateViews(viewId, tabActive);
+}
+
+function findTab(tabId, viewId) {
+    const tabs = BrowserView.getAllViews();
+    const tabActive = tabs.find(tab => tab.id === tabId);
+    return tabActive;
+}
+
+ipcMain.on('new-view', () => {
+    createView();
+})
 
 ipcMain.on('search-url', (_, { tabId, url }) => {
     const tabActive = findTab(tabId);
@@ -153,10 +160,6 @@ ipcMain.on('new-tab', (_, { viewId }) => {
 
 ipcMain.on('switch-tab', (_, { viewId, tabId }) => {
     switchTab(viewId, tabId);
-})
-
-ipcMain.on('new-view', () => {
-    createView();
 })
 
 ipcMain.on('go-back', (_, { tabId }) => {
