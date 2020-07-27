@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { createView, updateTab, createTab, switchTab } from '../utils/actions/browser.action';
+import { createView, removeView, createTab, updateTab, switchTab, removeTab } from '../utils/actions/browser.action';
 
 const { ipcRenderer } = window.require("electron");
 
@@ -34,6 +34,10 @@ export default function Main() {
       urlSearchBar.current.focus();
       dispatch(createTab(tabNew));
     })
+
+    ipcRenderer.on('remove-view', (_, viewId) => {
+      dispatch(removeView(viewId));
+    })
   }, [])
 
   const handleSearch = (event) => {
@@ -65,6 +69,11 @@ export default function Main() {
     urlSearchBar.current.select();
     dispatch(switchTab(viewId, tab.id));
     ipcRenderer.send('switch-tab', { viewId, tabId: tab.id });
+  }
+
+  const handleDeleteTab = (viewId, tabId) => {
+    dispatch(removeTab(tabId));
+    ipcRenderer.send('remove-tab', { viewId, tabId });
   }
 
   const goBack = () => {
@@ -124,12 +133,14 @@ export default function Main() {
                 tabs.map(tab => {
                   if (tab.viewId === view.id)
                     return (
-                      <button 
-                        key={tab.title} 
-                        onClick={() => handleSwitchTab(view.id, tab)}
-                        disabled={tabActive.id === tab.id ? true : false} 
-                        >{ tab.title }
-                      </button>
+                      <div key={tab.title} style={{ display: 'inline'}}>
+                        <button 
+                          onClick={() => handleSwitchTab(view.id, tab)}
+                          disabled={tabActive.id === tab.id ? true : false} 
+                          >{ tab.title }
+                        </button>
+                        <button onClick={() => handleDeleteTab(view.id, tab.id)}>X</button>
+                      </div>
                     )
                 })
               }

@@ -1,8 +1,7 @@
 const { app, BrowserView, ipcMain, screen: display } = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
-const findIndex = require('lodash/findIndex');
-const sortBy = require('lodash/sortBy');
+const { findIndex, sortBy, find, findLast } = require('lodash');
 
 const MainWindow = require('./main_window');
 const ViewWindow = require('./view_window');
@@ -42,6 +41,7 @@ function createMain() {
         : `file://${path.join(__dirname, "../build/index.html")}`
     );
     
+    // screen.width -= 500;
     // main.webContents.openDevTools();
     main.on("closed", () => (main = null));
 }
@@ -83,7 +83,11 @@ function createView() {
 function resizeViews() {
     const views = main.getBrowserViews();
     const tabs = BrowserView.getAllViews();
+    // TODO VIEWS Resize error when making 3 window & close the first view
+    // console.log(views.length)
+    // console.log("");
     tabs.map(tab => {
+        // console.log(tab.viewId);
         tab.setBounds({ 
             x: (screen.width / views.length) * tab.viewId,
             y: topBarHeight,
@@ -135,14 +139,45 @@ function createTab(viewId) {
 }
 
 function switchTab(viewId, tabId) {
-    const tabActive = findTab(tabId, viewId);
+    const tabActive = findTab(tabId);
     updateViews(viewId, tabActive);
 }
 
-function findTab(tabId, viewId) {
+function findTab(tabId) {
     const tabs = BrowserView.getAllViews();
     const tabActive = tabs.find(tab => tab.id === tabId);
     return tabActive;
+}
+
+function removeTab(viewId, tabId) {
+    // TODO TAB Remove last tab of view? Remove last tab of entire view?
+    const tabs = BrowserView.getAllViews();
+    const tabDestroyed = tabs.find(tab => tab.id === tabId);
+
+    const views = main.getBrowserViews();
+    const viewActive = find(views, { viewId });
+
+    const viewsSorted = sortBy(views, ['viewId']);
+    const viewActiveIndex = findIndex(viewsSorted, viewActive);
+
+    if (viewActive.id === tabId) {
+        const tabsAfterDestroy = tabs.filter(tab => tab.id !== tabDestroyed.id);
+        const tabSelectedAfterDestroyed = findLast(tabsAfterDestroy, { viewId });
+        if (tabSelectedAfterDestroyed) {
+            updateViews(viewId, tabSelectedAfterDestroyed);
+        } else {
+            if (BrowserView.getAllViews().length === 1) {
+                app.quit();
+            } else {
+                main.removeBrowserView(viewActive);
+                resizeViews(); // TODO VIEW Remove first view
+                main.webContents.send('remove-view', viewActiveIndex);
+            }
+        }
+    }
+    
+    tabDestroyed.destroy();
+    // viewActive.id === tabId ? !tabSelectedAfterDestroyed : !BrowserView.getAllViews().length === 1 ? resizeViews() : ''
 }
 
 ipcMain.on('new-view', () => {
@@ -160,6 +195,10 @@ ipcMain.on('new-tab', (_, { viewId }) => {
 
 ipcMain.on('switch-tab', (_, { viewId, tabId }) => {
     switchTab(viewId, tabId);
+})
+
+ipcMain.on('remove-tab', (_, { viewId, tabId }) => {
+    removeTab(viewId, tabId);
 })
 
 ipcMain.on('go-back', (_, { tabId }) => {

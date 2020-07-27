@@ -5,10 +5,10 @@ export function createView(viewNew) {
   })
 }
 
-export function updateTab(tabUpdated) {
+export function removeView(viewId) {
   return ({
-    type: 'UPDATE_TAB',
-    payload: tabUpdated,
+    type: 'REMOVE_VIEW',
+    payload: { viewId },
   })
 }
 
@@ -19,6 +19,13 @@ export function createTab(tab) {
   })
 }
 
+export function updateTab(tabUpdated) {
+  return ({
+    type: 'UPDATE_TAB',
+    payload: tabUpdated,
+  })
+}
+
 export function switchTab(viewId, tabId) {
   return ({
     type: 'SWITCH_TAB',
@@ -26,9 +33,9 @@ export function switchTab(viewId, tabId) {
   })
 }
 
-// export function setActiveView(viewId, tabId) {
-//   return ({
-//     type: 'SWITCH_TAB',
-//     payload: { viewId, tabId },
-//   })
-// }
+export function removeTab(tabId) {
+  return ({
+    type: 'REMOVE_TAB',
+    payload: { tabId },
+  })
+}
