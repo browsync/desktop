@@ -1,44 +1,68 @@
-const { app, BrowserView, ipcMain } = require("electron");
+const { app, BrowserView, ipcMain, screen: display } = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
 
 const MainWindow = require('./main_window');
 
-let mainWindow;
-let viewWindow;
+let searchEngineDefault = 'https://github.com';
+let screen;
+let topBarHeight = 100;
 
-function createWindow() {
-    mainWindow = new MainWindow({ 
-        width: 1200, 
-        height: 1000,
-        icon: ""
+let main;
+let view;
+
+function createMainWindow() {
+    screen = display.getPrimaryDisplay().workAreaSize;
+
+    main = new MainWindow({ 
+        width: screen.width, 
+        height: screen.height,
     });
      
-    mainWindow.loadURL(
+    main.loadURL(
         isDev
         ? "http://localhost:3000"
         : `file://${path.join(__dirname, "../build/index.html")}`
     );
-
-    viewWindow = new BrowserView()
-    mainWindow.addBrowserView(viewWindow);
-    viewWindow.setBounds({ x: 0, y: 250, width: 800, height: 1000 })
-    viewWindow.webContents.loadURL('https://google.com') //TODO change to default search engine from config
     
-    viewWindow.webContents.on('did-start-navigation', () => {
-        const { history, currentIndex } = viewWindow.webContents;
-        mainWindow.webContents.send('browser-history', {
+    createViewWindow();
+
+    main.on("closed", () => (main = null));
+    main.webContents.openDevTools();
+}
+
+function createViewWindow() { // TODO Add argument for split screen
+    view = new BrowserView();
+    // view.setAutoResize({ width: true, height: true });
+    main.setBrowserView(view); // TODO SPLIT SCREEN addBrowserView instead og set
+    resizeViewWindow(); 
+    view.webContents.loadURL(searchEngineDefault) //TODO SEARCH ENGINE Change to default search engine from config
+    
+    view.webContents.on('navigation-entry-commited', () => {
+        const { history, currentIndex } = view.webContents;
+        main.webContents.send('browser-history', {
+            id: view.id,
             urlCurrent: history[currentIndex],
             indexCurrent: currentIndex,
             indexLast: history.length - 1,
         });
     })
-
-    mainWindow.on("closed", () => (mainWindow = null));
-    mainWindow.webContents.openDevTools();
 }
 
-app.on("ready", createWindow);
+function resizeViewWindow() {
+    const views = [main.getBrowserView()];
+    // const views = BrowserView.getAllViews();
+    views.map((view, idx) => {
+        view.setBounds({ 
+            x: (screen.width / views.length) * idx,
+            y: topBarHeight,
+            width: screen.width / views.length - 400,
+            height: screen.height - topBarHeight,
+        }) //TODO VIEW Resize properly & dynamically 
+    })
+}
+
+app.on("ready", createMainWindow);
 
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {
@@ -47,31 +71,37 @@ app.on("window-all-closed", () => {
 });
 
 app.on("activate", () => {
-    if (mainWindow === null) {
-        createWindow();
+    if (main === null) {
+        createMainWindow();
     }
 });
 
 ipcMain.on('search-url', (event, url) => {
-    viewWindow.webContents.loadURL(url);
+    view.webContents.loadURL(url);
 })
 
 ipcMain.on('go-back', () => {
-    if (viewWindow.webContents.canGoBack()) {
-        return viewWindow.webContents.goBack();
+    if (view.webContents.canGoBack()) {
+        return view.webContents.goBack();
     }
 })
 
 ipcMain.on('go-forward', () => {
-    if (viewWindow.webContents.canGoForward()){
-        viewWindow.webContents.goForward();
+    if (view.webContents.canGoForward()){
+        view.webContents.goForward();
     }
 })
 
 ipcMain.on('go-home', () => {
-    viewWindow.webContents.goToIndex(0);
+    view.webContents.goToIndex(0);
 })
 
 ipcMain.on('reload', () => {
-    viewWindow.webContents.reload();
+    view.webContents.reload();
+})
+
+ipcMain.on('new-tab', (event, viewId) => {
+    createViewWindow();
+    // console.log(BrowserView.getAllViews());
+    // console.log(view.id);
 })
