@@ -2,44 +2,54 @@ const findIndex = require('lodash/findIndex');
 
 const initialState = {
   views: [],
-  viewSelected: {},
+  viewActive: {},
   tabs: [],
-  tabSelected: {},
+  tabActive: {},
   searchEngine: 'https://github.com',
 }
 
 const browserReducer = ( state = initialState, { type, payload }) => {
   let tabNew;
   let tabId;
+  let viewId;
+  let tabUpdatedIndex;
+  let tabActive;
+  let tabsUpdated;
+  let viewActive;
+  let viewNew;
 
   switch (type) {
-    case 'CREATE_VIEW':
-      tabNew = { id: 1, viewId: payload.id, title: `tab-${payload.id}.1`, urlCurrent: state.searchEngine, indexCurrent: 0, indexLast: 0 }
-      const viewNew = { id: payload.id, title: `view-${payload.id}`, tabLastId: 1};
-      // console.log("New Tab >>> ", tabNew);
-      // console.log("New View >>> ", viewNew);
-      return { 
+    case 'CREATE_VIEW': 
+      console.log("Create View");
+      tabNew = { ...payload, title: `tab-${payload.viewId}.${payload.id}` }
+      viewNew = { id: state.views.length, title: `view-${payload.id}`};
+      return {
         ...state,
         views: state.views.concat(viewNew),
         tabs: state.tabs.concat(tabNew),
-        viewSelected: viewNew,
-        tabSelected: tabNew,
+        viewActive: viewNew,
+        tabActive: tabNew,
       }
 
     case 'UPDATE_TAB':
-      const tabUpdatedIndex = findIndex(state.tabs, { id: payload.id });
-      const tabsUpdated = [ ...state.tabs ]
+      console.log("Reducer Updated Tab");
+      tabUpdatedIndex = findIndex(state.tabs, { id: payload.id, viewId: payload.viewId });
+      tabsUpdated = [ ...state.tabs ]
       tabsUpdated.splice(tabUpdatedIndex, 1, payload);
-      // console.log("payload >>>", payload);
-      // console.log("tabsNew >>>", tabsUpdated);
-      return { ...state, tabs: tabsUpdated, tabSelected: payload }
+      return { ...state, tabs: tabsUpdated, tabActive: payload }
 
     case 'CREATE_TAB':
-      tabId = state.tabs.length + 1;
-      const { viewId } = payload;
-      tabNew = { id: tabId, viewId: viewId, title: `tab-${viewId}.${tabId}`, urlCurrent: state.searchEngine, indexCurrent: 0, indexLast: 0 }; // TODO REFACTOR Use Class
-      console.log(state.tabs.concat(tabNew));
-      return { ...state, tabs: state.tabs.concat(tabNew), tabSelected: tabNew };
+      console.log("Reducer Create Tab");
+      payload.title = `tab-${payload.viewId}.${payload.id}`;
+      return { ...state, tabs: state.tabs.concat(payload), tabActive: payload };
+
+    case 'SWITCH_TAB':
+      console.log("Reducer Switch Tab");
+      ({ viewId, tabId } = payload);
+      viewActive = state.views.find(view => view.id === viewId);
+      tabActive = state.tabs.find(tab => tab.id === tabId);
+      console.log(viewActive, tabActive);
+      return { ...state, viewActive: viewActive, tabActive: tabActive };
 
     default: 
       return state;

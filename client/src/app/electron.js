@@ -1,22 +1,40 @@
 const { app, BrowserView, ipcMain, screen: display } = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
+const findIndex = require('lodash/findIndex');
 
 const MainWindow = require('./main_window');
+const ViewWindow = require('./view_window');
 
+let iconPath = path.join(app.getAppPath(), '/public/browsync2.ico');
 let searchEngineDefault = 'https://github.com';
 let screen;
-let topBarHeight = 100;
-
+let topBarHeight = 350;
 let main;
-let view;
+let isViewCreated;
+let isTabCreated;
 
-function createMainWindow() {
+(setupApp = () => {
+    app.on("ready", createMain);
+    app.on("window-all-closed", () => {
+        if (process.platform !== "darwin") {
+            app.quit();
+        }
+    });
+    app.on("activate", () => {
+        if (main === null) {
+            createMain();
+        }
+    });
+})();
+
+function createMain() {
     screen = display.getPrimaryDisplay().workAreaSize;
 
     main = new MainWindow({ 
         width: screen.width, 
         height: screen.height,
+        icon: iconPath,
     });
      
     main.loadURL(
@@ -25,83 +43,144 @@ function createMainWindow() {
         : `file://${path.join(__dirname, "../build/index.html")}`
     );
     
-    createViewWindow();
-
+    // main.webContents.openDevTools();
     main.on("closed", () => (main = null));
-    main.webContents.openDevTools();
 }
 
-function createViewWindow() { // TODO Add argument for split screen
-    view = new BrowserView();
-    // view.setAutoResize({ width: true, height: true });
-    main.setBrowserView(view); // TODO SPLIT SCREEN addBrowserView instead og set
-    resizeViewWindow(); 
-    view.webContents.loadURL(searchEngineDefault) //TODO SEARCH ENGINE Change to default search engine from config
+function createTab(viewId) { // TODO Add argument for split screen
+    const tabNew = new ViewWindow(viewId);
+    tabNew.webContents.loadURL(searchEngineDefault); //TODO SEARCH ENGINE Change to default search engine from config
+    updateViews(viewId, tabNew);
+    resizeViews();
+
+    isTabCreated = true;
     
-    view.webContents.on('navigation-entry-commited', () => {
-        const { history, currentIndex } = view.webContents;
-        main.webContents.send('browser-history', {
-            id: view.id,
+    tabNew.webContents.on('navigation-entry-commited', () => {
+        const { history, currentIndex } = tabNew.webContents;
+        const payload = {
+            id: tabNew.id,
+            viewId: viewId,
             urlCurrent: history[currentIndex],
             indexCurrent: currentIndex,
             indexLast: history.length - 1,
-        });
+        }
+        if (isTabCreated) {
+            main.webContents.send('new-tab-resp', payload);
+            isTabCreated = false;
+        } else {
+            main.webContents.send('tab-history', payload);
+        }
     })
 }
 
-function resizeViewWindow() {
-    const views = [main.getBrowserView()];
-    // const views = BrowserView.getAllViews();
-    views.map((view, idx) => {
-        view.setBounds({ 
-            x: (screen.width / views.length) * idx,
+function switchTab(viewId, tabId) {
+    const tabActive = findTab(tabId);
+    updateViews(viewId, tabActive);
+}
+
+function createView() {
+    const viewNew = new ViewWindow();
+    viewNew.webContents.loadURL(searchEngineDefault); // TODO SEARCH ENGINE Change to default search engine from config
+    main.addBrowserView(viewNew);
+
+    const views = main.getBrowserViews();
+    const viewActiveIndex = findIndex(views, { id: viewNew.id });
+    viewNew.setViewId(viewActiveIndex);
+
+    resizeViews();
+
+    isViewCreated = true;
+
+    viewNew.webContents.on('navigation-entry-commited', () => {
+        const views = main.getBrowserViews();
+        const viewActiveIndex = findIndex(views, { id: viewNew.id });
+        const { history, currentIndex } = viewNew.webContents;
+        const payload = {
+            id: viewNew.id,
+            viewId: viewActiveIndex,
+            urlCurrent: history[currentIndex],
+            indexCurrent: currentIndex,
+            indexLast: history.length - 1,
+        };
+        if (isViewCreated) {
+            main.webContents.send('new-view-resp', payload);
+            isViewCreated = false;
+        } else {
+            main.webContents.send('tab-history', payload);
+        }
+    })
+}
+
+function resizeViews() {
+    const views = main.getBrowserViews();
+    const tabs = BrowserView.getAllViews();
+    tabs.map(tab => {
+        tab.setBounds({ 
+            x: (screen.width / views.length) * tab.viewId,
             y: topBarHeight,
-            width: screen.width / views.length - 400,
+            width: screen.width / views.length,
             height: screen.height - topBarHeight,
-        }) //TODO VIEW Resize properly & dynamically 
+        })
     })
 }
 
-app.on("ready", createMainWindow);
+function findTab(tabId) {
+    const tabs = BrowserView.getAllViews();
+    const tabActive = tabs.find(tab => tab.id === tabId);
+    return tabActive;
+}
 
-app.on("window-all-closed", () => {
-    if (process.platform !== "darwin") {
-        app.quit();
+function updateViews(viewId, tabInserted) {
+    const views = main.getBrowserViews();
+    if (views.length > 0) {
+        views.forEach(view => {
+            main.removeBrowserView(view);
+        });
     }
-});
+    
+    views.splice(viewId, 1, tabInserted);
+    views.forEach(view => {
+        main.addBrowserView(view);
+    });
+}
 
-app.on("activate", () => {
-    if (main === null) {
-        createMainWindow();
+ipcMain.on('search-url', (_, { tabId, url }) => {
+    const tabActive = findTab(tabId);
+    tabActive.webContents.loadURL(url);
+})
+
+ipcMain.on('new-tab', (_, { viewId }) => {
+    createTab(viewId);
+})
+
+ipcMain.on('switch-tab', (_, { viewId, tabId }) => {
+    switchTab(viewId, tabId);
+})
+
+ipcMain.on('new-view', () => {
+    createView();
+})
+
+ipcMain.on('go-back', (_, { tabId }) => {
+    const tabActive = findTab(tabId);
+    if (tabActive.webContents.canGoBack()) {
+        return tabActive.webContents.goBack();
     }
-});
-
-ipcMain.on('search-url', (event, url) => {
-    view.webContents.loadURL(url);
 })
 
-ipcMain.on('go-back', () => {
-    if (view.webContents.canGoBack()) {
-        return view.webContents.goBack();
+ipcMain.on('go-forward', (_, { tabId }) => {
+    const tabActive = findTab(tabId);
+    if (tabActive.webContents.canGoForward()){
+        tabActive.webContents.goForward();
     }
 })
 
-ipcMain.on('go-forward', () => {
-    if (view.webContents.canGoForward()){
-        view.webContents.goForward();
-    }
+ipcMain.on('go-home', (_, { tabId }) => {
+    const tabActive = findTab(tabId);
+    tabActive.webContents.goToIndex(0);
 })
 
-ipcMain.on('go-home', () => {
-    view.webContents.goToIndex(0);
-})
-
-ipcMain.on('reload', () => {
-    view.webContents.reload();
-})
-
-ipcMain.on('new-tab', (event, viewId) => {
-    createViewWindow();
-    // console.log(BrowserView.getAllViews());
-    // console.log(view.id);
+ipcMain.on('reload', (_, { tabId }) => {
+    const tabActive = findTab(tabId);
+    tabActive.webContents.reload();
 })
