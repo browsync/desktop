@@ -28,3 +28,10 @@ export function createTab(viewId) {
     payload: { viewId },
   })
 }
+
+export function switchTab(viewId, tabId) {
+  return ({
+    type: 'SWITCH_TAB',
+    payload: { viewId, tabId },
+  })
+}
