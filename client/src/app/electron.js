@@ -6,20 +6,22 @@ const MainWindow = require('./main_window');
 
 let searchEngineDefault = 'https://github.com';
 let screen;
-let topBarHeight = 100;
+let topBarHeight = 400;
 let main;
 
-app.on("ready", createMain);
-app.on("window-all-closed", () => {
-    if (process.platform !== "darwin") {
-        app.quit();
-    }
-});
-app.on("activate", () => {
-    if (main === null) {
-        createMain();
-    }
-});
+(setupApp = () => {
+    app.on("ready", createMain);
+    app.on("window-all-closed", () => {
+        if (process.platform !== "darwin") {
+            app.quit();
+        }
+    });
+    app.on("activate", () => {
+        if (main === null) {
+            createMain();
+        }
+    });
+})();
 
 function createMain() {
     screen = display.getPrimaryDisplay().workAreaSize;
@@ -37,7 +39,6 @@ function createMain() {
     
     createTab(1);
     main.on("closed", () => (main = null));
-    main.webContents.openDevTools();
 }
 
 function createTab(viewId) { // TODO Add argument for split screen
@@ -57,21 +58,41 @@ function createTab(viewId) { // TODO Add argument for split screen
     })
 }
 
+function switchTab(viewId, tabId) {
+    const tabSelected = findTab(tabId);
+    updateViews(viewId, tabSelected);
+}
+
+function createView(){
+    // here tab mean view
+    const tabNew = new BrowserView(); // TODO CLASS Create class 
+    tabNew.webContents.loadURL(searchEngineDefault) //TODO SEARCH ENGINE Change to default search engine from config
+    // updateViews(viewId, tabNew);
+    main.addBrowserView(tabNew);
+    resizeViews();
+    
+    tabNew.webContents.on('navigation-entry-commited', () => {
+        const { history, currentIndex } = tabNew.webContents;
+        main.webContents.send('browser-history', {
+            id: tabNew.id,
+            urlCurrent: history[currentIndex],
+            indexCurrent: currentIndex,
+            indexLast: history.length - 1,
+        });
+        console.log(main.webContents);
+    })
+}
+
 function resizeViews() {
     const views = main.getBrowserViews();
     views.map((view, idx) => {
         view.setBounds({ 
             x: (screen.width / views.length) * idx,
             y: topBarHeight,
-            width: screen.width / views.length - 400,
+            width: screen.width / views.length,
             height: screen.height - topBarHeight,
         }) //TODO VIEW Resize properly & dynamically 
     })
-}
-
-function switchTab(viewId, tabId) {
-    const tabSelected = findTab(tabId);
-    updateViews(viewId, tabSelected);
 }
 
 function findTab(tabId) {
@@ -104,6 +125,10 @@ ipcMain.on('new-tab', (_, { viewId }) => {
 
 ipcMain.on('switch-tab', (_, { viewId, tabId }) => {
     switchTab(viewId, tabId);
+})
+
+ipcMain.on('new-view', () => {
+    createView();
 })
 
 ipcMain.on('go-back', (_, { tabId }) => {

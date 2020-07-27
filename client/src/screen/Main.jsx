@@ -50,7 +50,9 @@ export default function Main() {
     ipcRenderer.send('switch-tab', { viewId, tabId: tab.id });
   }
 
-  const createNewViewWindow = () => {
+  const handleCreateView = () => {
+    // listen
+    dispatch(createView(1));
     ipcRenderer.send('new-view');
   }
 
@@ -83,20 +85,28 @@ export default function Main() {
       <button 
         onClick={() => goBack()}
         disabled={ tabSelected.indexCurrent === 0 ? true : false }
-        >Back</button>
+        >Back
+      </button>
       <button 
         onClick={() => goForward()} 
         disabled={ tabSelected.indexCurrent === tabSelected.indexLast ? true : false }
-        >Forward</button>
-      <button onClick={() => goHome()}>Home</button>
-      <button onClick={() => reloadPage()}>Reload</button>
+        >Forward
+      </button>
+      <button
+        onClick={() => goHome()}
+        >Home
+      </button>
+      <button 
+        onClick={() => reloadPage()}
+        >Reload
+      </button>
 
       <form style={{ display: 'inline' }} onSubmit={handleSearch}>
         <input ref={urlSearchBar} style={{ width: 500 }} type="text" name="url" placeholder="Enter url" />
         <button type="submit" >Search</button>
       </form>
-      <button style={{ display: 'inline' }} onClick={() => addToBookmark()}>Add Bookmark</button>
-      <button style={{ display: 'block' }} onClick={() => createNewViewWindow()}>New Window</button>
+      <button onClick={() => addToBookmark()}>Add Bookmark</button>
+      <button onClick={() => handleCreateView()}>New Window</button>
       
       {
         views.map(view => {
@@ -105,7 +115,6 @@ export default function Main() {
               {
                 tabs.map(tab => {
                     return <button disabled={tabSelected.id === tab.id ? true : false} key={tab.id} onClick={() => handleSwitchTab(view.id, tab)}>{ tab.title }</button>
-                  
                 })
               }
               <button onClick={() => handleCreateTab(view.id)}>New Tab</button>
