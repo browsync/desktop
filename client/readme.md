@@ -1,1 +1,2 @@
-# Browsync Desktop Client
+# Browsync Desktop
+Beta version
