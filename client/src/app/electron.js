@@ -91,8 +91,8 @@ function resizeViews() {
         view.setBounds({ 
             x: (screen.width / views.length) * idx,
             y: topBarHeight,
-            width: 300,
-            height: screen.height - topBarHeight,
+            width: 10,
+            height: 10,
         }) //TODO VIEW Resize properly & dynamically 
     })
 }

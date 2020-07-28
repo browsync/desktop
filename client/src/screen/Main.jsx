@@ -4,6 +4,8 @@ import Axios from "axios";
 import Login from "../components/login";
 import {Dropdown} from "react-bootstrap";
 import FileBookmark from '../components/table'
+import FormBookmark from "../components/formAddBookmark"
+import FormFolder from "../components/formAddFolder"
 
 import {
   createView,
@@ -16,7 +18,7 @@ const { ipcRenderer } = window.require("electron");
 
 export default function Main() {
   const dispatch = useDispatch();
-
+  
   const user = useSelector((state) => state.userData)
   const views = useSelector((state) => state.browser.views);
   const tabs = useSelector((state) => state.browser.tabs);
@@ -48,7 +50,7 @@ export default function Main() {
       urlSearchBar.current.value = tabUpdated.urlCurrent;
       dispatch(updateTab(tabUpdated));
     });
-  }, []);
+  }, [folder.length]);
 
   const handleSearch = (event) => {
     event.preventDefault();
@@ -122,6 +124,12 @@ export default function Main() {
     });
   };
 
+  const handleAddFolder = (newFolder) => {
+    const incomingFolder = folder.concat(newFolder)
+    console.log(newFolder,'>>>> parent terima data')
+    setFolder(incomingFolder)
+  }
+
   return (
     <div>
       <button
@@ -163,9 +171,37 @@ export default function Main() {
           <Login></Login>
         </Dropdown.Menu>
       </Dropdown>
+      <Dropdown>
+        <Dropdown.Toggle variant="success" id="dropdown-basic">
+          Add Bookmark
+        </Dropdown.Toggle>
+
+        <Dropdown.Menu>
+          <FormBookmark data={folder}></FormBookmark>
+        </Dropdown.Menu>
+      </Dropdown>
+      <Dropdown>
+        <Dropdown.Toggle variant="success" id="dropdown-basic">
+          Add Folder
+        </Dropdown.Toggle>
+
+        <Dropdown.Menu>
+          <FormFolder getNewFolder={(newFolder) => handleAddFolder(newFolder)} data={folder}></FormFolder>
+        </Dropdown.Menu>
+      </Dropdown>
       {folder.data && folder.data.map((listFolder,idx) => {
         if(listFolder.FolderId === null){
-          return <FileBookmark data={listFolder}></FileBookmark>
+          return (
+            <Dropdown>
+              <Dropdown.Toggle variant="success" id="dropdown-basic">
+                 Folder {listFolder.name}
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <FileBookmark data={listFolder}></FileBookmark>      
+              </Dropdown.Menu>
+            </Dropdown>
+          
+          )
         }
       })}
       {folder && JSON.stringify(folder)}

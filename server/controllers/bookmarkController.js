@@ -13,7 +13,7 @@ class BookmarkController {
             res.status(201).json({message: 'Bookmark has been added'})
         })
         .catch(err => {
-            // res.status(500).json(err)
+            res.status(500).json(err)
             next({name: err})
 
         })
@@ -27,7 +27,7 @@ class BookmarkController {
         }
         Folder.create(folder)
         .then(data => {
-            res.status(201).json({message: 'Folder has been added'})
+            res.status(201).json({message: 'Folder has been added',data: data})
         })
         .catch(err => {
             // res.status(500).json(err)
@@ -37,10 +37,12 @@ class BookmarkController {
 
     static showFolder(req, res, next) {
         Folder.findAll({
-            include:{
+            include:[{
                 model: Folder,
                 as: 'Child'
-            },
+            },{
+                model: Bookmark
+            }],
             where:{
                 UserId: req.userData.id
             }

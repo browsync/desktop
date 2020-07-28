@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
     Folder.belongsTo(models.User)
     Folder.belongsTo(models.Folder,{foreignKey: 'FolderId',as: 'Parent'})
     Folder.hasMany(models.Folder,{as: 'Child'})
+    Folder.hasMany(models.Bookmark)
   };
   return Folder;
 };
