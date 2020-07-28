@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Icon from 'react-feather';
+import { Dropdown, DropdownButton } from 'react-bootstrap'
+import { Collapse, Button, CardBody, Card } from 'reactstrap';
 import $ from 'jquery'
 
 import { createView, removeView, createTab, updateTab, switchTab, removeTab } from '../utils/actions/browser.action';
@@ -9,11 +11,14 @@ const { ipcRenderer } = window.require("electron");
 
 export default function Main() {
   const dispatch = useDispatch();
-  const [ isSideBarActive, toggleSideBar] = useState(true);
+  const [isSideBarActive, toggleSideBar] = useState(true);
   const views = useSelector(state => state.browser.views);
   const tabs = useSelector(state => state.browser.tabs);
   const tabActive = useSelector(state => state.browser.tabActive);
   const urlSearchBar = useRef(null);
+  const [isOpenTab, setIsOpenTab] = useState(false);
+  const [isOpenBookmark, setIsOpenBookmark] = useState(false);
+
 
   useEffect(() => {
     // TODO BOOKMARK Fetch
@@ -104,35 +109,40 @@ export default function Main() {
     console.log("Add to bookmark"); // TODO BOOKMARK Add
   }
 
+
+  const toggleTab = () => setIsOpenTab(!isOpenTab);
+
+  const toggleBookmark = () => setIsOpenBookmark(!isOpenBookmark);
+
   return (
     <div>
       <div className="input-group py-2">
         <div className="input-group-prepend">
-          <button 
+          <button
             className="btn btn-sm btn-info ml-2 rounded"
             onClick={() => handleToggleSideBar()}
-            > <Icon.Menu />
+          > <Icon.Menu />
           </button>
 
-          <button 
+          <button
             className="btn btn-sm btn-info ml-2 rounded"
             onClick={() => goBack()}
-            disabled={ tabActive.indexCurrent === 0 ? true : false }
-            > <Icon.ChevronLeft />
+            disabled={tabActive.indexCurrent === 0 ? true : false}
+          > <Icon.ChevronLeft />
           </button>
 
-          <button 
+          <button
             className="btn btn-sm btn-info ml-2 rounded"
-            onClick={() => goForward()} 
-            disabled={ tabActive.indexCurrent === tabActive.indexLast ? true : false }
-            > <Icon.ChevronRight />
+            onClick={() => goForward()}
+            disabled={tabActive.indexCurrent === tabActive.indexLast ? true : false}
+          > <Icon.ChevronRight />
           </button>
 
           <button className="btn btn-sm btn-info ml-2 rounded" onClick={() => goHome()}> <Icon.Home /> </button>
           <button className="btn btn-sm btn-info ml-2 rounded" onClick={() => reloadPage()}> <Icon.RotateCw /> </button>
         </div>
         <form style={{ display: 'flex' }} onSubmit={handleSearch}>
-          <input ref={urlSearchBar} style={{ width: 1200, height: 35 }} type="text" name="url" placeholder="Enter url" className="form-control ml-2" />
+          <input ref={urlSearchBar} style={{ width: 500, height: 35 }} type="text" name="url" placeholder="Enter url" className="form-control ml-2" />
           <button tupe="submit" className="btn btn-sm btn-info"><Icon.Search /></button>
         </form>
         <div className="input-group-prepend">
@@ -141,64 +151,72 @@ export default function Main() {
           <button className="btn btn-sm btn-info ml-2 rounded"><Icon.User /></button>
         </div>
       </div>
-      
-      {
-        isSideBarActive && 
-          <nav id="sidebar" className="px-3">
-            <div className="sidebar-header">
-              <button type="button" id="sidebarCollapse" className="btn btn-info" onClick={() => $("#sidebar").toggleClass("active")}>
-                <h3>BrowSync</h3>
-                <strong>BS</strong>
-              </button>
-            </div>
-            <ul className="list-unstyled components" id="tab">
-              <li>
-                <input className="form-control" type="text" placeholder="Search" aria-label="Search" />
-              </li>
-              <li className="mt-3 mb-2">
-                {'> View Window'}
-              </li>
-              {
-                views.map(view => {
-                  return (
-                    <div>
-                      <li className="mt-2">{`  > Window ${view.id + 1}`}</li>
-                      <li style={{ display: 'inline' }} key={view.title}>
-                        {
-                          tabs.map(tab => {
-                            if (tab.viewId === view.id)
-                              return (
-                                <div key={tab.title} className="d-flex flex-row">
-                                  <button 
-                                    className="btn btn-sm btn-secondary btn-block" 
-                                    onClick={() => handleSwitchTab(view.id, tab)}
-                                    disabled={tabActive.id === tab.id ? true : false} 
-                                    >{ tab.title }
-                                  </button>
+      <nav id="sidebar" className="px-3">
+        <div className="sidebar-header">
+          <button type="button" id="sidebarCollapse" className="btn btn-info" onClick={() => $("#sidebar").toggleClass("active")}>
+            <h3>BrowSync</h3>
+            <strong>BS</strong>
+          </button>
+        </div>
+        <ul className="list-unstyled components" id="tab">
+          <li>
+            <input className="form-control" type="text" placeholder="Search" aria-label="Search" />
+          </li>
 
-                                  <button onClick={() => handleDeleteTab(view.id, tab.id)} className="btn btn-sm btn-danger" >
-                                    <Icon.XSquare />
+          {/* Masih nggak bisa */}
+
+          {
+            views.map(view => {
+              return (
+                <div>
+                  <a className="my-2" onClick={toggleTab}>{`  > Window ${view.id + 1}`}</a>
+                  <Collapse isOpen={isOpenTab}>
+                  <li style={{ display: 'inline' }} key={view.title}>
+                    {
+                      tabs.map(tab => {
+                        if (tab.viewId === view.id)
+                          return (
+                            <div key={tab.title} className="d-flex flex-row">
+                              <button
+                                className="btn btn-sm btn-light btn-block"
+                                onClick={() => handleSwitchTab(view.id, tab)}
+                                disabled={tabActive.id === tab.id ? true : false}
+                              >{tab.title}
+                              </button>
+
+                              <button onClick={() => handleDeleteTab(view.id, tab.id)} className="btn btn-sm btn-dark" >
+                                X
                                   </button>
-                                </div>
-                              )
-                          })
-                        }
-                      </li>
-                      <li>
-                        <button className="btn btn-sm btn-info btn-block" onClick={() => handleCreateTab(view.id)}>
-                          <Icon.PlusSquare />
-                        </button>
-                      </li>
-                    </div>
-                  )
-                })
-              }
-              <li className="mt-3 mb-2">
-                {'> Bookmark Window'}
-              </li>
-            </ul>
-          </nav>
-      }
-  </div>
+                            </div>
+                          )
+                      })
+                    }
+                  </li>
+                  </Collapse>
+                  <li>
+                    <button className="btn btn-sm btn-info btn-block" onClick={() => handleCreateTab(view.id)}>
+                      <Icon.PlusSquare />
+                    </button>
+                  </li>
+                </div>
+              )
+            })
+          }
+          <li className="mt-3 mb-2">
+            <a onClick={toggleBookmark}>{`  > Bookmark`}</a>
+            <Collapse isOpen={isOpenBookmark}>
+              <ul>
+                <li>
+                  Bookmark 1
+                </li>
+                <li>
+                  Bookmark 2
+                </li>
+              </ul>
+            </Collapse>
+          </li>
+        </ul>
+      </nav>
+    </div>
   )
 }
