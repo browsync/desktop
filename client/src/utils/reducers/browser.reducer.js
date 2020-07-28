@@ -20,8 +20,8 @@ const browserReducer = ( state = initialState, { type, payload }) => {
 
   switch (type) {
     case 'CREATE_VIEW': 
-      tabNew = { ...payload, title: `tab-${payload.viewId}.${payload.id}` }
-      viewNew = { id: state.views.length, title: `view-${payload.id}`};
+      tabNew = { ...payload, name: `tab-${payload.viewId}.${payload.id}` }
+      viewNew = { id: state.views.length, name: `view-${payload.id}`};
       return {
         ...state,
         views: state.views.concat(viewNew),
@@ -35,11 +35,11 @@ const browserReducer = ( state = initialState, { type, payload }) => {
       return { ...state, views: viewsFiltered }
 
     case 'CREATE_TAB':
-      payload.title = `tab-${payload.viewId}.${payload.id}`;
+      payload.name = `tab-${payload.viewId}.${payload.id}`;
       return { ...state, tabs: state.tabs.concat(payload), tabActive: payload };
 
     case 'UPDATE_TAB':
-      payload.title = `tab-${payload.viewId}.${payload.id}`
+      payload.name = `tab-${payload.viewId}.${payload.id}`
       tabUpdatedIndex = findIndex(state.tabs, { id: payload.id, viewId: payload.viewId });
       tabsUpdated = [ ...state.tabs ]
       tabsUpdated.splice(tabUpdatedIndex, 1, payload);

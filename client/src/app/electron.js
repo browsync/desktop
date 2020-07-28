@@ -7,7 +7,7 @@ const MainWindow = require('./main_window');
 const ViewWindow = require('./view_window');
 
 let iconPath = path.join(app.getAppPath(), '/public/browsync2.ico');
-let searchEngineDefault = 'https://github.com';
+let searchEngineDefault = 'https://google.com';
 let screen;
 let topBarHeight = 51;
 let sideBarWidth = 250;
@@ -37,6 +37,7 @@ function createMain() {
         width: screen.width, 
         height: screen.height,
         icon: iconPath,
+        frame: false,
     });
      
     main.loadURL(
@@ -45,7 +46,7 @@ function createMain() {
         : `file://${path.join(__dirname, "../build/index.html")}`
     );
     
-    // screen.width -= 800;
+    // screen.width -= 400;
     // main.webContents.openDevTools();
     main.on("closed", () => (main = null));
 }
