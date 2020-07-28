@@ -3,7 +3,7 @@ import { Form, Button } from "react-bootstrap";
 import Axios from "axios";
 
 export default (props) => {
-  const { data, getNewFolder } = props;
+  const { data, getNewFolder, getFolder } = props;
   const folder = data.data;
   const [name, setName] = useState("");
   const [selectFolder, setSelectFolder] = useState(null);
@@ -20,23 +20,46 @@ export default (props) => {
   };
 
   const onSubmit = (e) => {
-    e.preventDefault();
-    Axios({
-      method: "post",
-      url: `http://localhost:5000/folder?id=${selectFolder}`,
-      data: {
-        name : name
-      },
-      headers: {
-        access_token: localStorage.access_token,
-      },
-    })
-      .then(({ data }) => {
-        getNewFolder(data)
-    })
-      .catch((err) => {
-        console.log(err);
-      });
+    if(selectFolder !== null){
+        e.preventDefault()
+        Axios({
+        method: "post",
+        url: `http://localhost:5000/folder?id=${selectFolder}`,
+        data: {
+            name : name
+        },
+        headers: {
+            access_token: localStorage.access_token,
+        },
+        })
+        .then(({ data }) => {
+            // getNewFolder(data)
+            getFolder()
+        })
+        .catch((err) => {
+            console.log(err);
+        });
+    }
+    else{
+        e.preventDefault();
+        Axios({
+        method: "post",
+        url: `http://localhost:5000/folder?id=`,
+        data: {
+            name : name
+        },
+        headers: {
+            access_token: localStorage.access_token,
+        },
+        })
+        .then(({ data }) => {
+            getFolder()
+            getNewFolder(data)
+        })
+        .catch((err) => {
+            console.log(err);
+        });
+    }
   };
 
   return (

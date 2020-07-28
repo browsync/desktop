@@ -89,7 +89,7 @@ export default (props) => {
                   <td>
                     <Dropdown>
                       <Dropdown.Toggle variant="success" id="dropdown-basic">
-                        Sub folder
+                        {child.name}
                       </Dropdown.Toggle>
                       <Dropdown.Menu>
                         <h4>Folder {child.name}</h4>

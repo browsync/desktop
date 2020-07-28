@@ -3,7 +3,7 @@ import { Form, Button } from "react-bootstrap";
 import Axios from "axios";
 
 export default (props) => {
-  const { data } = props;
+  const { data, getFolder } = props;
   const folder = data.data;
   const [url, setUrl] = useState("");
   const [selectFolder, setSelectFolder] = useState(null);
@@ -35,6 +35,7 @@ export default (props) => {
       }
     })
       .then(({ data }) => {
+        getFolder()
         console.log(data);
       })
       .catch((err) => {

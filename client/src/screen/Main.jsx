@@ -27,6 +27,7 @@ export default function Main() {
   const urlSearchBar = useRef(null);
   const [isLogin, setLogin] = useState(false);
   const [folder, setFolder] = useState([])
+  const [count, setCount] = useState(0)
   const fetchFolder = () => {
     Axios({
       method:'get',
@@ -50,7 +51,7 @@ export default function Main() {
       urlSearchBar.current.value = tabUpdated.urlCurrent;
       dispatch(updateTab(tabUpdated));
     });
-  }, [folder.length]);
+  }, []);
 
   const handleSearch = (event) => {
     event.preventDefault();
@@ -125,9 +126,10 @@ export default function Main() {
   };
 
   const handleAddFolder = (newFolder) => {
-    const incomingFolder = folder.concat(newFolder)
+    // const incomingFolder = folder.push(newFolder)
     console.log(newFolder,'>>>> parent terima data')
-    setFolder(incomingFolder)
+    // setFolder(incomingFolder)
+    fetchFolder()
   }
 
   return (
@@ -177,7 +179,7 @@ export default function Main() {
         </Dropdown.Toggle>
 
         <Dropdown.Menu>
-          <FormBookmark data={folder}></FormBookmark>
+          <FormBookmark getFolder={() => fetchFolder()} data={folder}></FormBookmark>
         </Dropdown.Menu>
       </Dropdown>
       <Dropdown>
@@ -186,7 +188,7 @@ export default function Main() {
         </Dropdown.Toggle>
 
         <Dropdown.Menu>
-          <FormFolder getNewFolder={(newFolder) => handleAddFolder(newFolder)} data={folder}></FormFolder>
+          <FormFolder getFolder={() => fetchFolder()} getNewFolder={(newFolder) => handleAddFolder(newFolder)} data={folder}></FormFolder>
         </Dropdown.Menu>
       </Dropdown>
       {folder.data && folder.data.map((listFolder,idx) => {
