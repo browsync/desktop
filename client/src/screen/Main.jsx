@@ -3,8 +3,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import * as Icon from 'react-feather';
 import $ from 'jquery'
 
+<<<<<<< HEAD
 import { createView, updateTab, createTab, switchTab, setActiveView } from '../utils/actions/browser.action';
 import { findLastIndex } from 'lodash';
+=======
+import { createView, removeView, createTab, updateTab, switchTab, removeTab } from '../utils/actions/browser.action';
+>>>>>>> 68a1e0b7c7cc863966a38cebf074b47d729b5e60
 
 const { ipcRenderer } = window.require("electron");
 
@@ -12,20 +16,33 @@ export default function Main() {
   const dispatch = useDispatch();
   const views = useSelector(state => state.browser.views);
   const tabs = useSelector(state => state.browser.tabs);
+<<<<<<< HEAD
   const viewActive = useSelector(state => state.browser.viewActive);
+=======
+>>>>>>> 68a1e0b7c7cc863966a38cebf074b47d729b5e60
   const tabActive = useSelector(state => state.browser.tabActive);
   const urlSearchBar = useRef(null);
 
   useEffect(() => {
+<<<<<<< HEAD
     // TODO BOOKMARK Fetch bookmark data from server
     ipcRenderer.send('new-view');
 
     ipcRenderer.on('tab-history', (event, tabUpdated) => {
       tabUpdated.viewId = viewActive.id;
+=======
+    // TODO BOOKMARK Fetch
+    ipcRenderer.send('new-view');
+
+    ipcRenderer.on('tab-history', (_, tabUpdated) => {
+>>>>>>> 68a1e0b7c7cc863966a38cebf074b47d729b5e60
       urlSearchBar.current.value = tabUpdated.urlCurrent;
+      urlSearchBar.current.focus();
+      urlSearchBar.current.select();
       dispatch(updateTab(tabUpdated));
     })
 
+<<<<<<< HEAD
     ipcRenderer.on('new-view-resp', (event, viewNew) => {
       dispatch(createView(viewNew));
     })
@@ -34,6 +51,23 @@ export default function Main() {
       dispatch(createTab(tabNew));
     })
 
+=======
+    ipcRenderer.on('new-view-resp', (_, viewNew) => {
+      urlSearchBar.current.value = '';
+      urlSearchBar.current.focus();
+      dispatch(createView(viewNew));
+    })
+
+    ipcRenderer.on('new-tab-resp', (_, tabNew) => {
+      urlSearchBar.current.value = '';
+      urlSearchBar.current.focus();
+      dispatch(createTab(tabNew));
+    })
+
+    ipcRenderer.on('remove-view', (_, viewId) => {
+      dispatch(removeView(viewId));
+    })
+>>>>>>> 68a1e0b7c7cc863966a38cebf074b47d729b5e60
   }, [])
 
   const handleSearch = (event) => {
@@ -51,18 +85,36 @@ export default function Main() {
     }
   }
 
+<<<<<<< HEAD
+=======
+  const handleCreateView = () => {
+    ipcRenderer.send('new-view');
+  }
+
+>>>>>>> 68a1e0b7c7cc863966a38cebf074b47d729b5e60
   const handleCreateTab = (viewId) => {
     ipcRenderer.send('new-tab', { viewId });
   }
 
   const handleSwitchTab = (viewId, tab) => {
     urlSearchBar.current.value = tab.urlCurrent;
+<<<<<<< HEAD
+=======
+    urlSearchBar.current.focus();
+    urlSearchBar.current.select();
+>>>>>>> 68a1e0b7c7cc863966a38cebf074b47d729b5e60
     dispatch(switchTab(viewId, tab.id));
     ipcRenderer.send('switch-tab', { viewId, tabId: tab.id });
   }
 
+<<<<<<< HEAD
   const handleCreateView = () => {
     ipcRenderer.send('new-view');
+=======
+  const handleDeleteTab = (viewId, tabId) => {
+    dispatch(removeTab(tabId));
+    ipcRenderer.send('remove-tab', { viewId, tabId });
+>>>>>>> 68a1e0b7c7cc863966a38cebf074b47d729b5e60
   }
 
   const goBack = () => {
@@ -82,11 +134,16 @@ export default function Main() {
   }
 
   const addToBookmark = () => {
+<<<<<<< HEAD
     console.log("Add to bookmark"); // TODO BOOKMARK Add url to bookmark both local & server
+=======
+    console.log("Add to bookmark"); // TODO BOOKMARK Add
+>>>>>>> 68a1e0b7c7cc863966a38cebf074b47d729b5e60
   }
 
   return (
     <div>
+<<<<<<< HEAD
     <div className="input-group">
         <div class="input-group-prepend">
           <button 
@@ -172,6 +229,60 @@ export default function Main() {
           </li>
         </ul>
       </nav>
+=======
+      <button 
+        onClick={() => goBack()}
+        disabled={ tabActive.indexCurrent === 0 ? true : false }
+        >Back
+      </button>
+      <button 
+        onClick={() => goForward()} 
+        disabled={ tabActive.indexCurrent === tabActive.indexLast ? true : false }
+        >Forward
+      </button>
+      <button
+        onClick={() => goHome()}
+        >Home
+      </button>
+      <button 
+        onClick={() => reloadPage()}
+        >Reload
+      </button>
+
+      <form style={{ display: 'inline' }} onSubmit={handleSearch}>
+        <input ref={urlSearchBar} style={{ width: 500 }} type="text" name="url" placeholder="Enter url" />
+        <button type="submit" >Search</button>
+      </form>
+      <button onClick={() => addToBookmark()}>Add Bookmark</button>
+      <button onClick={() => handleCreateView()}>New Window</button>
+      
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+      {
+        views.map(view => {
+          return (
+            <div style={{ display: 'inline' }} key={view.title}>
+              {
+                tabs.map(tab => {
+                  if (tab.viewId === view.id)
+                    return (
+                      <div key={tab.title} style={{ display: 'inline'}}>
+                        <button 
+                          onClick={() => handleSwitchTab(view.id, tab)}
+                          disabled={tabActive.id === tab.id ? true : false} 
+                          >{ tab.title }
+                        </button>
+                        <button onClick={() => handleDeleteTab(view.id, tab.id)}>X</button>
+                      </div>
+                    )
+                })
+              }
+              <button onClick={() => handleCreateTab(view.id)}>New Tab</button>
+            </div>
+          )
+        })
+      }
+      </div>
+>>>>>>> 68a1e0b7c7cc863966a38cebf074b47d729b5e60
   </div>
   )
 }
