@@ -9,7 +9,9 @@ const ViewWindow = require('./view_window');
 let iconPath = path.join(app.getAppPath(), '/public/browsync2.ico');
 let searchEngineDefault = 'https://github.com';
 let screen;
-let topBarHeight = 50;
+let topBarHeight = 51;
+let sideBarWidth = 250;
+let isSideBarActive = true;
 let main;
 let isViewCreated;
 let isTabCreated;
@@ -43,7 +45,7 @@ function createMain() {
         : `file://${path.join(__dirname, "../build/index.html")}`
     );
     
-    // screen.width -= 500;
+    // screen.width -= 800;
     // main.webContents.openDevTools();
     main.on("closed", () => (main = null));
 }
@@ -86,14 +88,22 @@ function resizeViews() {
     const views = main.getBrowserViews();
     const tabs = BrowserView.getAllViews();
     // TODO VIEWS Resize error when making 3 window & close the first view
-    // console.log(views.length)
-    // console.log("");
+    // console.log(views.length, '\n)
     tabs.map(tab => {
         // console.log(tab.viewId);
+        let viewPosX;
+        let viewWidth;
+        if (isSideBarActive) {
+            viewPosX = sideBarWidth + ((screen.width - sideBarWidth) / views.length) * tab.viewId;
+            viewWidth = (screen.width - sideBarWidth) / views.length;
+        } else{
+            viewPosX = (screen.width / views.length) * tab.viewId;
+            viewWidth = screen.width / views.length;
+        }
         tab.setBounds({ 
-            x: (screen.width / views.length) * tab.viewId,
+            x: viewPosX,
             y: topBarHeight,
-            width: screen.width / views.length,
+            width: viewWidth,
             height: screen.height - topBarHeight,
         })
     })
@@ -225,4 +235,9 @@ ipcMain.on('go-home', (_, { tabId }) => {
 ipcMain.on('reload', (_, { tabId }) => {
     const tabActive = findTab(tabId);
     tabActive.webContents.reload();
+})
+
+ipcMain.on('toggle-sidebar', () => {
+    isSideBarActive = !isSideBarActive;
+    resizeViews();
 })

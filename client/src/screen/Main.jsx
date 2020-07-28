@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Icon from 'react-feather';
 import $ from 'jquery'
@@ -9,6 +9,7 @@ const { ipcRenderer } = window.require("electron");
 
 export default function Main() {
   const dispatch = useDispatch();
+  const [ isSideBarActive, toggleSideBar] = useState(true);
   const views = useSelector(state => state.browser.views);
   const tabs = useSelector(state => state.browser.tabs);
   const tabActive = useSelector(state => state.browser.tabActive);
@@ -94,97 +95,110 @@ export default function Main() {
     ipcRenderer.send('reload', { tabId: tabActive.id });
   }
 
+  const handleToggleSideBar = () => {
+    toggleSideBar(!isSideBarActive);
+    ipcRenderer.send('toggle-sidebar');
+  }
+
   const addToBookmark = () => {
     console.log("Add to bookmark"); // TODO BOOKMARK Add
   }
 
   return (
     <div>
-    <div className="input-group">
-        <div class="input-group-prepend">
+      <div className="input-group py-2">
+        <div className="input-group-prepend">
           <button 
-            className="btn btn-sm btn-info"
+            className="btn btn-sm btn-info ml-2 rounded"
+            onClick={() => handleToggleSideBar()}
+            > <Icon.Menu />
+          </button>
+
+          <button 
+            className="btn btn-sm btn-info ml-2 rounded"
             onClick={() => goBack()}
             disabled={ tabActive.indexCurrent === 0 ? true : false }
             > <Icon.ChevronLeft />
           </button>
 
           <button 
-            className="btn btn-sm btn-info ml-2"
+            className="btn btn-sm btn-info ml-2 rounded"
             onClick={() => goForward()} 
             disabled={ tabActive.indexCurrent === tabActive.indexLast ? true : false }
             > <Icon.ChevronRight />
           </button>
 
-          <button className="btn btn-sm btn-info ml-2" onClick={() => goHome()}> <Icon.Home /> </button>
-          <button className="btn btn-sm btn-info ml-2" onClick={() => reloadPage()}> <Icon.RotateCw /> </button>
+          <button className="btn btn-sm btn-info ml-2 rounded" onClick={() => goHome()}> <Icon.Home /> </button>
+          <button className="btn btn-sm btn-info ml-2 rounded" onClick={() => reloadPage()}> <Icon.RotateCw /> </button>
         </div>
-        <form style={{ display: 'inline' }} onSubmit={handleSearch}>
-          <input ref={urlSearchBar} style={{ width: 500, height: 35 }} type="text" name="url" placeholder="Enter url" className="form-control ml-2" />
+        <form style={{ display: 'flex' }} onSubmit={handleSearch}>
+          <input ref={urlSearchBar} style={{ width: 1200, height: 35 }} type="text" name="url" placeholder="Enter url" className="form-control ml-2" />
+          <button tupe="submit" className="btn btn-sm btn-info"><Icon.Search /></button>
         </form>
         <div className="input-group-prepend">
-          <button className="btn btn-sm btn-info" onClick={() => handleSearch()}> <Icon.Search /> </button>
-          <button className="btn btn-sm btn-info  ml-2" style={{ display: 'inline' }} onClick={() => addToBookmark()}> <Icon.Bookmark /> </button>
-          <button className="btn btn-sm btn-info  ml-2" onClick={() => handleCreateView()}>New Window</button>
-
+          <button className="btn btn-sm btn-info ml-2 rounded" style={{ display: 'inline' }} onClick={() => addToBookmark()}> <Icon.Bookmark /> </button>
+          <button className="btn btn-sm btn-info ml-2 rounded" onClick={() => handleCreateView()}>New Window</button>
+          <button className="btn btn-sm btn-info ml-2 rounded"><Icon.User /></button>
         </div>
       </div>
+      
+      {
+        isSideBarActive && 
+          <nav id="sidebar" className="px-3">
+            <div className="sidebar-header">
+              <button type="button" id="sidebarCollapse" className="btn btn-info" onClick={() => $("#sidebar").toggleClass("active")}>
+                <h3>BrowSync</h3>
+                <strong>BS</strong>
+              </button>
+            </div>
+            <ul className="list-unstyled components" id="tab">
+              <li>
+                <input className="form-control" type="text" placeholder="Search" aria-label="Search" />
+              </li>
+              <li className="mt-3 mb-2">
+                {'> View Window'}
+              </li>
+              {
+                views.map(view => {
+                  return (
+                    <div>
+                      <li className="mt-2">{`  > Window ${view.id + 1}`}</li>
+                      <li style={{ display: 'inline' }} key={view.title}>
+                        {
+                          tabs.map(tab => {
+                            if (tab.viewId === view.id)
+                              return (
+                                <div key={tab.title} className="d-flex flex-row">
+                                  <button 
+                                    className="btn btn-sm btn-secondary btn-block" 
+                                    onClick={() => handleSwitchTab(view.id, tab)}
+                                    disabled={tabActive.id === tab.id ? true : false} 
+                                    >{ tab.title }
+                                  </button>
 
-      <nav id="sidebar">
-        <div class="sidebar-header">
-          <button type="button" id="sidebarCollapse" class="btn btn-info" onClick={() => $("#sidebar").toggleClass("active")}>
-            <h3 className="mx-3"> BrowSync </h3>
-            <strong>BS</strong>
-          </button>
-        </div>
-        <ul class="list-unstyled components" id="tab">
-          <li>
-            {
-              views.map(view => {
-                return (
-                  <button className="btn btn-sm btn-info btn-block" onClick={() => handleCreateTab(view.id)}>
-                    <Icon.PlusSquare /> {view.id + 1}
-                  </button>
-                )
-              })
-            }
-          </li>
-          <li>
-            <input class="form-control" type="text" placeholder="Search" aria-label="Search" />
-          </li>
-          {
-            views.map(view => {
-              return (
-                <li style={{ display: 'inline' }} key={view.title}>
-                  {
-                    tabs.map(tab => {
-                      if (tab.viewId === view.id)
-                        return (
-                          <div key={tab.title} className="d-flex flex-row">
-                            <button 
-                              className="btn btn-sm btn-secondary btn-block" 
-                              onClick={() => handleSwitchTab(view.id, tab)}
-                              disabled={tabActive.id === tab.id ? true : false} 
-                              >{ tab.title }
-                            </button>
-
-                            {/* tombo close tab */}
-                            <button onClick={handleCreateTab} className="btn btn-sm btn-danger" >
-                              <Icon.XSquare />
-                            </button>
-                          </div>
-                        )
-                    })
-                  }
-                </li>
-              )
-            })
-          }
-          <li className="text-center">
-            v Bookmark v
-          </li>
-        </ul>
-      </nav>
+                                  <button onClick={() => handleDeleteTab(view.id, tab.id)} className="btn btn-sm btn-danger" >
+                                    <Icon.XSquare />
+                                  </button>
+                                </div>
+                              )
+                          })
+                        }
+                      </li>
+                      <li>
+                        <button className="btn btn-sm btn-info btn-block" onClick={() => handleCreateTab(view.id)}>
+                          <Icon.PlusSquare />
+                        </button>
+                      </li>
+                    </div>
+                  )
+                })
+              }
+              <li className="mt-3 mb-2">
+                {'> Bookmark Window'}
+              </li>
+            </ul>
+          </nav>
+      }
   </div>
   )
 }
