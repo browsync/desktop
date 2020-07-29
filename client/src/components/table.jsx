@@ -43,7 +43,6 @@ export default (props) => {
       });
     });
     Promise.all(promises).then((results) => {
-      console.log(results);
       for (let i = 0; i < results.length; i++) {
         fetchData.push(results[i].data.data);
       }
@@ -68,8 +67,8 @@ export default (props) => {
           {data &&
             data.Bookmarks?.map((bookmark, idx) => {
               return (
-                <tr>
-                  <td>{bookmark.url}</td>
+                <tr key={bookmark.id}>
+                  <td><button onClick={() => props.createNew(bookmark.url)}>{bookmark.url}</button></td>
                 </tr>
               );
             })}
@@ -82,6 +81,7 @@ export default (props) => {
           </tr>
         </thead>
         <tbody>
+          {/*
           {childData &&
             childData?.map((child, idx) => {
               return (
@@ -100,6 +100,8 @@ export default (props) => {
                 </tr>
               );
             })}
+            */
+          }
         </tbody>
       </Table>
     </div>

@@ -35,13 +35,17 @@ export default function Main() {
       }
     })
     .then(({data}) => {
-      setFolder(data)
+      setFolder(data);
+      setLogin(true);
     })
 }
   
   useEffect(() => {
-    // TODO BOOKMARK Fetch
-    fetchFolder();
+    if (localStorage.access_token) {
+      fetchFolder();
+      setLogin(true);
+    }
+
     ipcRenderer.send('new-view');
 
     ipcRenderer.on('tab-history', (_, tabUpdated) => {
@@ -89,8 +93,12 @@ export default function Main() {
     ipcRenderer.send('new-view');
   }
 
-  const handleCreateTab = (viewId) => {
-    ipcRenderer.send('new-tab', { viewId });
+  const handleCreateTab = (viewId, url) => {
+    if (!viewId) {
+      ipcRenderer.send('new-tab', { viewId: tabActive.viewId, url: url });
+    } else {
+      ipcRenderer.send('new-tab', { viewId });
+    }
   }
 
   const handleSwitchTab = (viewId, tab) => {
@@ -127,14 +135,19 @@ export default function Main() {
     ipcRenderer.send('toggle-sidebar');
   }
 
-  const addToBookmark = () => {
-    console.log("Add to bookmark"); // TODO BOOKMARK Add url to bookmark both local & server
+  const handleAddToBookmark = (bookmark) => {
+    const folderUpdated = Object.assign({}, folder)
+    folderUpdated.data.forEach((folder, idx) => {
+      if (folder.id === bookmark.data.FolderId)
+        folderUpdated.data[idx].Bookmarks.push(bookmark.data);
+    })
+    setFolder(folderUpdated);
   };
 
   const handleAddFolder = (newFolder) => {
-    const incomingFolder = folder.concat(newFolder)
-    console.log(newFolder,'>>>> parent terima data')
-    setFolder(incomingFolder)
+    console.log(newFolder);
+    const incomingFolder = folder.concat(newFolder);
+    setFolder(incomingFolder);
   }
 
   const updateTabsForSearchOptions = () => {
@@ -149,102 +162,68 @@ export default function Main() {
     handleSwitchTab(tabSearched.viewId, tabSearched);
   }
 
+
   return (
     <div>
-      <div className="input-group py-2">
-        <div className="input-group-prepend">
-          <button 
-            className="btn btn-sm btn-info ml-2 rounded"
-            onClick={() => handleToggleSideBar()}
-            > <Icon.Menu />
-          </button>
-
-          <button 
-            className="btn btn-sm btn-info ml-2 rounded"
-            onClick={() => goBack()}
-            disabled={ tabActive.indexCurrent === 0 ? true : false }
-            > <Icon.ChevronLeft />
-          </button>
-
-          <button 
-            className="btn btn-sm btn-info ml-2 rounded"
-            onClick={() => goForward()} 
-            disabled={ tabActive.indexCurrent === tabActive.indexLast ? true : false }
-            > <Icon.ChevronRight />
-          </button>
-
-          <button className="btn btn-sm btn-info ml-2 rounded" onClick={() => goHome()}> <Icon.Home /> </button>
-          <button className="btn btn-sm btn-info ml-2 rounded" onClick={() => reloadPage()}> <Icon.RotateCw /> </button>
-        </div>
-        <form style={{ display: 'flex' }} onSubmit={handleSearch}>
-          <input ref={urlSearchBar} style={{ width: 1150, height: 35 }} type="text" name="url" placeholder="Enter url" className="form-control ml-2" />
-          <button type="submit" className="btn btn-sm btn-info"><Icon.Search /></button>
-        </form>
-
+      <div className="input-group pt-3 pb-2">
         <div className="input-group-prepend">
           <Dropdown className="ml-2">
-            <Dropdown.Toggle variant="success" id="dropdown-basic">
-              <Icon.Bookmark /> 
-            </Dropdown.Toggle>
-
-            <Dropdown.Menu>
-              <FormBookmark data={folder}></FormBookmark>
-            </Dropdown.Menu>
-          </Dropdown>
-          
-          <SelectSearch 
-            className="ml-2 rounded"
-            placeholder="Search tab"
-            search
-            options={tabsForSearch}
-            onChange={(tab) => handleSearchTab(tab)}
-          />
-          <button className="btn btn-sm btn-info ml-2 rounded" onClick={() => handleCreateView()}>New Window</button>
-          <Dropdown className="ml-2">
-            <Dropdown.Toggle variant="success" id="dropdown-basic">
+            <Dropdown.Toggle  variant="success" id="dropdown-basic">
               <Icon.User />
             </Dropdown.Toggle>
 
             <Dropdown.Menu>
-              <Login></Login>
+              <Login loggedIn={() => fetchFolder()}></Login>
             </Dropdown.Menu>
           </Dropdown>
+
+          <Dropdown className="ml-3">
+            <Dropdown.Toggle variant="info" id="dropdown-basic">
+              <Icon.Bookmark />
+            </Dropdown.Toggle>
+
+            <Dropdown.Menu>
+              <FormBookmark url={tabActive.urlCurrent} addBookmarkLocal={(bookmark) => handleAddToBookmark(bookmark)} data={folder}></FormBookmark>
+            </Dropdown.Menu>
+          </Dropdown>
+
+          <button
+            className="btn btn-sm btn-info ml-3 rounded"
+            onClick={() => handleToggleSideBar()}
+            ><Icon.Menu />
+          </button>
+          
+          <button className="btn btn-sm btn-info ml-3 rounded" onClick={() => handleCreateView()}><Icon.Columns /></button>
         </div>
-      </div>
-
-      <div>
         
-        <Dropdown>
-          <Dropdown.Toggle variant="success" id="dropdown-basic">
-            Add Folder
-          </Dropdown.Toggle>
+        <form style={{ display: 'flex' }} onSubmit={handleSearch}>
+          <input ref={urlSearchBar} style={{ width: 1355, height: 35 }} type="text" name="url" placeholder="Enter url" className="form-control ml-3" />
+          <button type="submit" className="btn btn-sm btn-info rounded ml-3"><Icon.Search /></button>
+        </form>
 
-          <Dropdown.Menu>
-            <FormFolder getNewFolder={(newFolder) => handleAddFolder(newFolder)} data={folder}></FormFolder>
-          </Dropdown.Menu>
-        
-        </Dropdown>
-        {folder.data && folder.data.map((listFolder, idx) => {
-          if(listFolder.FolderId === null){
-            return (
-              <Dropdown>
-                <Dropdown.Toggle variant="success" id="dropdown-basic">
-                  Folder {listFolder.name}
-                </Dropdown.Toggle>
-                <Dropdown.Menu>
-                  <FileBookmark data={listFolder}></FileBookmark>      
-                </Dropdown.Menu>
-              </Dropdown>
-            
-            )
-          }
-        })}
-        {folder && JSON.stringify(folder)}
+        <div className="input-group-prepend">
+          <button
+            className="btn btn-sm btn-info ml-3 rounded"
+            onClick={() => goBack()} 
+            disabled={ tabActive.indexCurrent === 0 ? true : false }
+            ><Icon.ChevronLeft />
+          </button>
+
+          <button
+            className="btn btn-sm btn-info ml-3 rounded"
+            onClick={() => goForward()}
+            disabled={ tabActive.indexCurrent === tabActive.indexLast ? true : false }
+            ><Icon.ChevronRight />
+          </button>
+
+          <button className="btn btn-sm btn-info ml-3 rounded" onClick={() => goHome()}><Icon.Home /></button>
+          <button className="btn btn-sm btn-info ml-3 rounded" onClick={() => reloadPage()}><Icon.RotateCw /></button>
+        </div>
       </div>
 
       {
         isSideBarActive && 
-          <nav id="sidebar" className="px-3" style={{ height: '100vh' }} onFocus={updateTabsForSearchOptions}>
+          <nav id="sidebar" className="px-3" style={{ height: '94vh' }} onFocus={updateTabsForSearchOptions}>
             <div className="sidebar-header">
               <button type="button" id="sidebarCollapse" className="btn btn-info">
                 <h3>BrowSync</h3>
@@ -313,6 +292,37 @@ export default function Main() {
 
               <li className="mt-3 mb-2">
                 {'> Bookmark Window'}
+              </li>
+
+              <li>
+                <div>
+                  {folder.data && folder.data.map((listFolder, idx) => {
+                    if(listFolder.FolderId === null){
+                      return (
+                        <Dropdown key={listFolder.id}>
+                          <Dropdown.Toggle variant="success" id="dropdown-basic">
+                            {`> ${listFolder.name}`}
+                          </Dropdown.Toggle>
+                          <Dropdown.Menu>
+                            <FileBookmark createNew={(url) => handleCreateTab(null, url)} data={listFolder}></FileBookmark>      
+                          </Dropdown.Menu>
+                        </Dropdown>
+                      )
+                    }
+                  })}
+                </div>
+              </li>
+
+              <li>
+                <Dropdown>
+                  <Dropdown.Toggle variant="info" id="dropdown-basic">
+                    Add Folder
+                  </Dropdown.Toggle>
+
+                  <Dropdown.Menu>
+                    <FormFolder getNewFolder={(newFolder) => handleAddFolder(newFolder)} data={folder}></FormFolder>
+                  </Dropdown.Menu>
+                </Dropdown>
               </li>
             </ul>
           </nav>

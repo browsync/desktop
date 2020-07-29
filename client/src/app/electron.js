@@ -7,9 +7,9 @@ const MainWindow = require('./main_window');
 const ViewWindow = require('./view_window');
 
 let iconPath = path.join(app.getAppPath(), '/public/browsync2.ico');
-let searchEngineDefault = 'https://google.com';
+let searchEngineDefault = 'https://github.com';
 let screen;
-let topBarHeight = 151;
+let topBarHeight = 63; // 51
 let sideBarWidth = 250;
 let isSideBarActive = true;
 let main;
@@ -46,8 +46,8 @@ function createMain() {
         : `file://${path.join(__dirname, "../build/index.html")}`
     );
     
-    // screen.width -= 400;
-    // main.webContents.openDevTools();
+    screen.width -= 400;
+    main.webContents.openDevTools();
     main.on("closed", () => (main = null));
 }
 
@@ -124,9 +124,15 @@ function updateViews(viewId, tabInserted) {
     });
 }
 
-function createTab(viewId) { 
+function createTab(viewId, url) { 
     const tabNew = new ViewWindow(viewId);
-    tabNew.webContents.loadURL(searchEngineDefault).then(() => {
+    let urlLoaded;
+    if (url) {
+        urlLoaded = url;
+    } else {
+        urlLoaded = searchEngineDefault;
+    }
+    tabNew.webContents.loadURL(urlLoaded).then(() => {
         updateViews(viewId, tabNew);
         resizeViews();
     })
@@ -202,8 +208,8 @@ ipcMain.on('search-url', (_, { tabId, url }) => {
     tabActive.webContents.loadURL(url);
 })
 
-ipcMain.on('new-tab', (_, { viewId }) => {
-    createTab(viewId);
+ipcMain.on('new-tab', (_, { viewId, url }) => {
+    createTab(viewId, url);
 })
 
 ipcMain.on('switch-tab', (_, { viewId, tabId }) => {

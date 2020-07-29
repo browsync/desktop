@@ -10,7 +10,7 @@ class BookmarkController {
         }
         Bookmark.create(bookmark)
         .then(data => {
-            res.status(201).json({message: 'Bookmark has been added'})
+            res.status(201).json({ data, message: 'Bookmark has been added'})
         })
         .catch(err => {
             res.status(500).json(err)
@@ -27,7 +27,8 @@ class BookmarkController {
         }
         Folder.create(folder)
         .then(data => {
-            res.status(201).json({message: 'Folder has been added',data: data})
+            console.log(data);
+            res.status(201).json({ data, message: 'Folder has been added',data: data})
         })
         .catch(err => {
             // res.status(500).json(err)

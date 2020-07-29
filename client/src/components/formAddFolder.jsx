@@ -12,8 +12,6 @@ export default (props) => {
     setName(e.target.value);
   };
 
-
-
   const onSelectFolder = (e) => {
     console.log(e.target.value);
     setSelectFolder(e.target.value);
@@ -32,6 +30,7 @@ export default (props) => {
       },
     })
       .then(({ data }) => {
+        console.log("Component, new folder >>> ", data)
         getNewFolder(data)
     })
       .catch((err) => {
@@ -55,7 +54,7 @@ export default (props) => {
           <Form.Label>Custom select</Form.Label>
           <Form.Control onChange={onSelectFolder} as="select" custom>
             {folder?.map((folder) => {
-              return <option value={folder.id}>{folder.name}</option>;
+              return <option key={folder.id} value={folder.id}>{folder.name}</option>;
             })}
           </Form.Control>
         </Form.Group>

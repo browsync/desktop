@@ -1,5 +1,5 @@
 
-export const login = (email, password) => {
+export const login = (email, password, loggedIn) => {
     return async (dispatch) => {
         const resp = await fetch("http://localhost:5000/login", 
         {method: "POST",
@@ -14,8 +14,7 @@ export const login = (email, password) => {
     const userData = await resp.json()
     // redis.set('access_token', userData.access_token)
     localStorage.setItem('access_token', userData.access_token)
-    
-    localStorage.setItem("access_token", userData.access_token)
+    loggedIn();
     dispatch({
         type: "ADD_USER",
         payload: {
