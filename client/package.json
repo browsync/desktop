@@ -30,7 +30,8 @@
     "react-select-search": "^2.0.4",
     "reactstrap": "^8.5.1",
     "redux": "^4.0.5",
-    "redux-thunk": "^2.3.0"
+    "redux-thunk": "^2.3.0",
+    "url-to-title": "^1.0.6"
   },
   "scripts": {
     "start-react": "react-scripts start",
@@ -58,7 +59,7 @@
     ]
   },
   "devDependencies": {
-    "concurrently": "^5.0.0",
+    "concurrently": "^5.2.0",
     "electron": "^7.1.0",
     "electron-builder": "^22.1.0",
     "wait-on": "^3.3.0"

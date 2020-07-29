@@ -8,6 +8,7 @@ export default (props) => {
   const promise = [];
   const fetchData = [];
   const [childData, setChildData] = useState([]);
+
   const fetchFolder = (id) => {
     // const resp = await fetch(`http://localhost:5000/folder/${id}`)
     // const result = resp.json()
@@ -24,34 +25,36 @@ export default (props) => {
       // setChildData(fetchData);
     });
   };
-  // const fetchAllChild = () => {
-  //   // if (data.Child) {
-  //   //   for (let i = 0; i < data.Child.length; i++) {
-  //   //     promise.push(fetchFolder(data.Child[i].id));
-  //   //     console.log(data.Child[i].id);
-  //   //   }
-  //   //   Promise.all(promise)
-  //   //   .then(({data}) => setChildData(data))
-  //   // }
-  //   const promises = data.Child.map((folder) => {
-  //     return Axios({
-  //       method: "get",
-  //       url: `http://localhost:5000/folder/${folder.id}`,
-  //       headers: {
-  //         access_token: localStorage.access_token,
-  //       },
-  //     });
-  //   });
-  //   Promise.all(promises).then((results) => {
-  //     for (let i = 0; i < results.length; i++) {
-  //       fetchData.push(results[i].data.data);
-  //     }
-  //     setChildData(fetchData);
-  //   });
-  // };
-  // useEffect(() => {
-  //   fetchAllChild();
-  // }, []);
+
+  const fetchAllChild = () => {
+    // if (data.Child) {
+    //   for (let i = 0; i < data.Child.length; i++) {
+    //     promise.push(fetchFolder(data.Child[i].id));
+    //     console.log(data.Child[i].id);
+    //   }
+    //   Promise.all(promise)
+    //   .then(({data}) => setChildData(data))
+    // }
+    const promises = data.Child.map((folder) => {
+      return Axios({
+        method: "get",
+        url: `http://localhost:5000/folder/${folder.id}`,
+        headers: {
+          access_token: localStorage.access_token,
+        },
+      });
+    });
+    Promise.all(promises).then((results) => {
+      for (let i = 0; i < results.length; i++) {
+        fetchData.push(results[i].data.data);
+      }
+      setChildData(fetchData);
+    });
+  };
+
+  useEffect(() => {
+    fetchAllChild();
+  }, [props.data]);
 
   return (
     <div>
@@ -64,18 +67,21 @@ export default (props) => {
           </tr>
         </thead>
         <tbody>
+        {/*
+          {JSON.stringify(data)}
+            */}
+
           {data &&
             data.Bookmarks?.map((bookmark, idx) => {
-              return (
+              return ( 
                 <tr key={bookmark.id}>
                   <td><button className="btn btn-light" onClick={() => props.createNew(bookmark.url)}>{bookmark.url}</button></td>
-                </tr>
+              </tr>
               );
             })}
         </tbody>
       </Table>
 
-      {/*
       <Table striped bordered hover size="sm">
         <thead>
           <tr>
@@ -90,10 +96,10 @@ export default (props) => {
                   <td>
                     <Dropdown>
                       <Dropdown.Toggle variant="success" id="dropdown-basic">
-                        Sub folder
+                        {child.name}
+                        
                       </Dropdown.Toggle>
                       <Dropdown.Menu>
-                        <h4>Folder {child.name}</h4>
                         <FileBookmark data={child}></FileBookmark>
                       </Dropdown.Menu>
                     </Dropdown>
@@ -103,7 +109,6 @@ export default (props) => {
             })}
         </tbody>
       </Table>
-      */}
     </div>
   );
 };

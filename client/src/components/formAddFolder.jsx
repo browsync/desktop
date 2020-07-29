@@ -13,7 +13,7 @@ export default (props) => {
   };
 
   const onSelectFolder = (e) => {
-    console.log(e.target.value);
+    // console.log(e.target.value);
     setSelectFolder(e.target.value);
   };
 
@@ -49,7 +49,7 @@ export default (props) => {
           />
           <Form.Text className="text-muted"></Form.Text>
         </Form.Group>
-        {/*
+
         <Form.Group>
           <Form.Label>Custom select</Form.Label>
           <Form.Control onChange={onSelectFolder} as="select" custom>
@@ -58,7 +58,7 @@ export default (props) => {
             })}
           </Form.Control>
         </Form.Group>
-        */}
+        
         <Button variant="primary" type="submit">
           Submit
         </Button>

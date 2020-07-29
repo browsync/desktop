@@ -22,7 +22,6 @@ const browserReducer = ( state = initialState, { type, payload }) => {
     case 'CREATE_VIEW': 
       if (!payload.name) payload.name = `tab-${payload.viewId}.${payload.id}`;
       viewNew = { id: state.views.length, name: `view-${payload.id}`, isOpen: true };
-      console.log(payload);
       return {
         ...state,
         views: state.views.concat(viewNew),

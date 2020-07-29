@@ -14,6 +14,7 @@ export default (props) => {
   };
 
   const onSelectFolder = (e) => {
+    console.log(e.target.value);
     setSelectFolder(e.target.value);
   };
 
@@ -25,7 +26,7 @@ export default (props) => {
 
   const onSubmit = (e) => {
     e.preventDefault();
-
+    console.log(selectFolder, url);
     Axios({
       method: "post",
       url: `http://localhost:5000/bookmark/${selectFolder}`,
@@ -37,6 +38,7 @@ export default (props) => {
       }
     })
       .then(({ data }) => {
+        console.log(data);
         props.addBookmarkLocal(data);
       })
       .catch((err) => {

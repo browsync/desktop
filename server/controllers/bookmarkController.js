@@ -58,10 +58,12 @@ class BookmarkController {
 
     static showOneFolder(req, res, next) {
         Folder.findByPk(req.params.id,{
-            include:{
+            include:[{
                 model: Folder,
                 as: 'Child'
-            },
+            },{
+                model: Bookmark
+            }],
             where:{
                 UserId: req.userData.id
             }

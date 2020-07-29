@@ -130,19 +130,23 @@ export default function Main() {
   }
 
   const handleAddToBookmark = (bookmark) => {
-    const folderUpdated = Object.assign({}, folder);
-    folderUpdated.data.forEach((folder, idx) => {
-      if (folder.id === bookmark.data.FolderId) {
-        folderUpdated.data[idx].Bookmarks.push(bookmark.data);
-      }
-    })
-    setFolder(folderUpdated);
+    fetchFolder();
+    console.log(folder);
+    // const folderUpdated = Object.assign({}, folder);
+    // folderUpdated.data.forEach((folder, idx) => {
+    //   if (folder.id === bookmark.data.FolderId) {
+    //     folderUpdated.data[idx].Bookmarks.push(bookmark.data);
+    //   }
+    // })
+    // setFolder(folderUpdated);
   };
 
   const handleAddFolder = (newFolder) => {
-    newFolder.data.Bookmarks = [];
-    const incomingFolder = {...folder, data: folder.data.concat(newFolder.data)};
-    setFolder(incomingFolder);
+    fetchFolder();
+    // newFolder.data.Bookmarks = [];
+    // const incomingFolder = {...folder, data: folder.data.concat(newFolder.data)};
+    // console.log(incomingFolder);
+    // setFolder(incomingFolder);
   }
 
   const updateTabsForSearchOptions = () => {
@@ -229,7 +233,6 @@ export default function Main() {
             <ul className="list-unstyled components" id="tab">
               <li>
                 <SelectSearch
-                  className="border-0"
                   placeholder="Search tab"
                   search
                   options={tabsForSearch}

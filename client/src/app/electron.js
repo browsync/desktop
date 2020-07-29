@@ -7,12 +7,11 @@ var getTitleFromUrl = require('url-to-title');
 const MainWindow = require('./main_window');
 const ViewWindow = require('./view_window');
 
-
 let iconPath = path.join(app.getAppPath(), '/public/browsync2.ico');
 let searchEngineDefault = 'https://google.com';
 let screen;
 let topBarHeight = 63; // 51
-let sideBarWidth = 250;
+let sideBarWidth = 450;
 let isSideBarActive = true;
 let main;
 let isViewCreated;
@@ -48,8 +47,8 @@ function createMain() {
         : `file://${path.join(__dirname, "../build/index.html")}`
     );
     
-    // screen.width -= 400;
-    // main.webContents.openDevTools();
+    screen.width -= 400;
+    main.webContents.openDevTools();
     main.on("closed", () => (main = null));
 }
 
