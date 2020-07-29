@@ -35,7 +35,7 @@ const browserReducer = ( state = initialState, { type, payload }) => {
       return { ...state, views: viewsFiltered }
 
     case 'TOGGLE_VIEW':
-      const viewUpdated = Object.assign({}, state.views);
+      const viewUpdated = [...state.views];
       viewUpdated.forEach((view, idx) => {
         if (view.id === payload.viewId) {
           viewUpdated[idx].isOpen = !viewUpdated[idx].isOpen;

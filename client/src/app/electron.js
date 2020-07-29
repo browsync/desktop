@@ -46,8 +46,8 @@ function createMain() {
         : `file://${path.join(__dirname, "../build/index.html")}`
     );
     
-    screen.width -= 400;
-    main.webContents.openDevTools();
+    // screen.width -= 400;
+    // main.webContents.openDevTools();
     main.on("closed", () => (main = null));
 }
 

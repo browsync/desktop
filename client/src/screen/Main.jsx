@@ -30,7 +30,7 @@ export default function Main() {
   const [isOpenView, setIsOpenView] = useState(true);
   const [isOpenBookmark, setIsOpenBookmark] = useState(true);
   const toggleAllView = () => setIsOpenView(!isOpenView);
-  const toggleView = (viewId) => toggleView(viewId);
+  const handleToggleView = (viewId) => dispatch(toggleView(viewId));
   const toggleBookmark = () => setIsOpenBookmark(!isOpenBookmark);
   
   useEffect(() => {
@@ -245,7 +245,7 @@ export default function Main() {
                 views.map(view => {
                   return (
                     <div key={view.id}>
-                      <li className="mt-2" onClick={() => toggleView(view.id)} >{`> Window ${view.id + 1}`}</li>
+                      <li className="mt-2" onClick={() => handleToggleView(view.id)} >{`> Window ${view.id + 1}`}</li>
 
                       <Collapse isOpen={view.isOpen}>
 
