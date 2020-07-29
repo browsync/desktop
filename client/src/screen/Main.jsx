@@ -172,18 +172,18 @@ export default function Main() {
   }
 
   return (
-    <div>
-      <div className="input-group pt-3 pb-2">
+    <div style={{ overflow: 'hidden' }}>
+      <div className="input-group pt-3 pb-2" style={{ backgroundColor: 'white' }}>
         <div className="input-group-prepend">
           {
             isLogin
               ? <button
-                  className="btn btn-sm btn-warning ml-2 rounded"
+                  className="btn btn-sm btn-warning ml-3 rounded"
                   onClick={() => logout()}
                   ><Icon.LogOut />
                 </button>
 
-              : <Dropdown className="ml-2">
+              : <Dropdown className="ml-3">
                   <Dropdown.Toggle  variant="success" id="dropdown-basic">
                     <Icon.User />
                   </Dropdown.Toggle>
@@ -213,8 +213,8 @@ export default function Main() {
           <button className="btn btn-sm btn-info ml-3 rounded" onClick={() => handleCreateView()}><Icon.Columns /></button>
         </div>
         
-        <form style={{ display: 'flex' }} onSubmit={handleSearch}>
-          <input ref={urlSearchBar} style={{ width: 1355, height: 35 }} type="text" name="url" placeholder="Enter url" className="form-control ml-3" />
+        <form style={{ display: 'flex', flexGrow: 100 }} onSubmit={handleSearch}>
+          <input ref={urlSearchBar} style={{ width: '100%', height: 35 }} type="text" name="url" placeholder="Enter url" className="form-control ml-3" />
           <button type="submit" className="btn btn-sm btn-info rounded ml-3"><Icon.Search /></button>
         </form>
 
@@ -234,13 +234,13 @@ export default function Main() {
           </button>
 
           <button className="btn btn-sm btn-info ml-3 rounded" onClick={() => goHome()}><Icon.Home /></button>
-          <button className="btn btn-sm btn-info ml-3 rounded" onClick={() => reloadPage()}><Icon.RotateCw /></button>
+          <button className="btn btn-sm btn-info mx-3 rounded" onClick={() => reloadPage()}><Icon.RotateCw /></button>
         </div>
       </div>
 
       {
         isSideBarActive && 
-          <nav id="sidebar" className="px-3" style={{ height: '94vh' }} onFocus={updateTabsForSearchOptions}>
+          <nav id="sidebar" className="" style={{ height: '94vh', overflowY: 'auto', overflowX: 'hidden' }} onFocus={updateTabsForSearchOptions}>
             <div className="sidebar-header">
               <button type="button" id="sidebarCollapse" className="btn btn-info">
                 <h3>BrowSync</h3>
@@ -248,7 +248,7 @@ export default function Main() {
               </button>
             </div>
 
-            <ul className="list-unstyled components" id="tab">
+            <ul className="list-unstyled components px-3" id="tab">
               <li>
                 <SelectSearch
                   placeholder="Search tab"

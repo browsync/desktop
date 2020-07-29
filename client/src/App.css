@@ -311,6 +311,8 @@ a.article:hover {
 }
 .select-search__options {
     list-style: none;
+    max-height: 200px;
+    overflow-y: auto;
 }
 .select-search__row:not(:first-child) {
     border-top: 1px solid #eee;
