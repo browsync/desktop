@@ -138,15 +138,18 @@ export default function Main() {
   const handleAddToBookmark = (bookmark) => {
     const folderUpdated = Object.assign({}, folder)
     folderUpdated.data.forEach((folder, idx) => {
-      if (folder.id === bookmark.data.FolderId)
+      if (folder.id === bookmark.data.FolderId) {
         folderUpdated.data[idx].Bookmarks.push(bookmark.data);
+      }
     })
     setFolder(folderUpdated);
   };
 
   const handleAddFolder = (newFolder) => {
-    console.log(newFolder);
-    const incomingFolder = folder.concat(newFolder);
+    newFolder.data.Bookmarks = [];
+    const incomingFolder = {...folder, data: folder.data.concat(newFolder.data)};
+    console.log(folder);
+    console.log(incomingFolder);
     setFolder(incomingFolder);
   }
 
@@ -161,7 +164,6 @@ export default function Main() {
     const tabSearched = JSON.parse(tab);
     handleSwitchTab(tabSearched.viewId, tabSearched);
   }
-
 
   return (
     <div>

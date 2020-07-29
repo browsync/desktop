@@ -27,7 +27,6 @@ class BookmarkController {
         }
         Folder.create(folder)
         .then(data => {
-            console.log(data);
             res.status(201).json({ data, message: 'Folder has been added',data: data})
         })
         .catch(err => {

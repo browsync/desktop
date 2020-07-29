@@ -24,34 +24,34 @@ export default (props) => {
       // setChildData(fetchData);
     });
   };
-  const fetchAllChild = () => {
-    // if (data.Child) {
-    //   for (let i = 0; i < data.Child.length; i++) {
-    //     promise.push(fetchFolder(data.Child[i].id));
-    //     console.log(data.Child[i].id);
-    //   }
-    //   Promise.all(promise)
-    //   .then(({data}) => setChildData(data))
-    // }
-    const promises = data.Child.map((folder) => {
-      return Axios({
-        method: "get",
-        url: `http://localhost:5000/folder/${folder.id}`,
-        headers: {
-          access_token: localStorage.access_token,
-        },
-      });
-    });
-    Promise.all(promises).then((results) => {
-      for (let i = 0; i < results.length; i++) {
-        fetchData.push(results[i].data.data);
-      }
-      setChildData(fetchData);
-    });
-  };
-  useEffect(() => {
-    fetchAllChild();
-  }, []);
+  // const fetchAllChild = () => {
+  //   // if (data.Child) {
+  //   //   for (let i = 0; i < data.Child.length; i++) {
+  //   //     promise.push(fetchFolder(data.Child[i].id));
+  //   //     console.log(data.Child[i].id);
+  //   //   }
+  //   //   Promise.all(promise)
+  //   //   .then(({data}) => setChildData(data))
+  //   // }
+  //   const promises = data.Child.map((folder) => {
+  //     return Axios({
+  //       method: "get",
+  //       url: `http://localhost:5000/folder/${folder.id}`,
+  //       headers: {
+  //         access_token: localStorage.access_token,
+  //       },
+  //     });
+  //   });
+  //   Promise.all(promises).then((results) => {
+  //     for (let i = 0; i < results.length; i++) {
+  //       fetchData.push(results[i].data.data);
+  //     }
+  //     setChildData(fetchData);
+  //   });
+  // };
+  // useEffect(() => {
+  //   fetchAllChild();
+  // }, []);
 
   return (
     <div>
@@ -74,6 +74,8 @@ export default (props) => {
             })}
         </tbody>
       </Table>
+
+      {/*
       <Table striped bordered hover size="sm">
         <thead>
           <tr>
@@ -81,7 +83,6 @@ export default (props) => {
           </tr>
         </thead>
         <tbody>
-          {/*
           {childData &&
             childData?.map((child, idx) => {
               return (
@@ -100,10 +101,9 @@ export default (props) => {
                 </tr>
               );
             })}
-            */
-          }
         </tbody>
       </Table>
+      */}
     </div>
   );
 };

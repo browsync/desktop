@@ -21,7 +21,7 @@ export default (props) => {
     e.preventDefault();
     Axios({
       method: "post",
-      url: `http://localhost:5000/folder?id=${selectFolder}`,
+      url: `http://localhost:5000/folder?id=${selectFolder ? selectFolder : ''}`,
       data: {
         name : name
       },
@@ -30,7 +30,6 @@ export default (props) => {
       },
     })
       .then(({ data }) => {
-        console.log("Component, new folder >>> ", data)
         getNewFolder(data)
     })
       .catch((err) => {
@@ -39,7 +38,7 @@ export default (props) => {
   };
 
   return (
-    <>
+    <div className="px-2 py-2">
       <Form onSubmit={onSubmit}>
         <Form.Group controlId="formBasicEmail">
           <Form.Label>Folder Name</Form.Label>
@@ -50,6 +49,7 @@ export default (props) => {
           />
           <Form.Text className="text-muted"></Form.Text>
         </Form.Group>
+        {/*
         <Form.Group>
           <Form.Label>Custom select</Form.Label>
           <Form.Control onChange={onSelectFolder} as="select" custom>
@@ -58,10 +58,11 @@ export default (props) => {
             })}
           </Form.Control>
         </Form.Group>
+        */}
         <Button variant="primary" type="submit">
           Submit
         </Button>
       </Form>
-    </>
+    </div>
   );
 };
