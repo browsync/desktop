@@ -68,7 +68,7 @@ export default (props) => {
             data.Bookmarks?.map((bookmark, idx) => {
               return (
                 <tr key={bookmark.id}>
-                  <td><button onClick={() => props.createNew(bookmark.url)}>{bookmark.url}</button></td>
+                  <td><button className="btn btn-light" onClick={() => props.createNew(bookmark.url)}>{bookmark.url}</button></td>
                 </tr>
               );
             })}

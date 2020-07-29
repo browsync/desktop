@@ -173,7 +173,7 @@ export default function Main() {
           </Dropdown>
 
           <Dropdown className="ml-3">
-            <Dropdown.Toggle variant="info" id="dropdown-basic">
+            <Dropdown.Toggle variant="info" id="dropdown-basic" disabled={ isLogin ? false : true }>
               <Icon.Bookmark />
             </Dropdown.Toggle>
 
@@ -228,7 +228,8 @@ export default function Main() {
 
             <ul className="list-unstyled components" id="tab">
               <li>
-                <SelectSearch 
+                <SelectSearch
+                  className="border-0"
                   placeholder="Search tab"
                   search
                   options={tabsForSearch}
@@ -259,14 +260,14 @@ export default function Main() {
                                   className="d-flex flex-row"
                                 >
                                   <button 
-                                    className="btn btn-sm btn-secondary btn-block" 
+                                    className="btn btn-sm btn-light btn-block text-left"
                                     disabled={tabActive.id === tab.id ? true : false} 
                                     onClick={() => handleSwitchTab(view.id, tab)}
                                     >{ tab.name }
                                   </button>
 
                                   <button 
-                                    className="btn btn-sm btn-danger"
+                                    className="btn btn-sm btn-dark"
                                     onClick={() => handleDeleteTab(view.id, tab.id)}
                                     ><Icon.XSquare />
                                   </button>
@@ -304,7 +305,7 @@ export default function Main() {
                             <Dropdown.Toggle variant="success" id="dropdown-basic">
                               {`> ${listFolder.name}`}
                             </Dropdown.Toggle>
-                            <Dropdown.Menu>
+                            <Dropdown.Menu className="py-0 rounded-bottom border-0" >
                               <FileBookmark createNew={(url) => handleCreateTab(null, url)} data={listFolder}></FileBookmark>      
                             </Dropdown.Menu>
                           </Dropdown>
@@ -315,7 +316,7 @@ export default function Main() {
 
                 <li>
                   <Dropdown>
-                    <Dropdown.Toggle variant="info" id="dropdown-basic">
+                    <Dropdown.Toggle variant="info" id="dropdown-basic" id="dropdown-basic" disabled={ isLogin ? false : true }>
                       Add Folder
                     </Dropdown.Toggle>
 
