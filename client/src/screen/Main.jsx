@@ -16,7 +16,6 @@ const { ipcRenderer } = window.require("electron");
 
 export default function Main() {
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.userData)
   const [isLogin, setLogin] = useState(false);
   const [folder, setFolder] = useState([])
 
@@ -36,7 +35,6 @@ export default function Main() {
   useEffect(() => {
     if (localStorage.access_token) {
       fetchFolder();
-      setLogin(true);
     }
 
     ipcRenderer.send('new-view');
@@ -131,13 +129,7 @@ export default function Main() {
   const reloadPage = () => ipcRenderer.send('reload', { tabId: tabActive.id });
   
   const handleToggleSideBar = () => {
-    if (isSideBarActive) { // TODO SHORTCUT Trigger from Electron
-      console.log(true);
-      toggleSideBar(false);
-    } else {
-      console.log(false);
-      toggleSideBar(true);
-    }
+    toggleSideBar(!isSideBarActive);
     ipcRenderer.send('toggle-sidebar');
   }
 
@@ -173,21 +165,35 @@ export default function Main() {
     handleSwitchTab(tabSearched.viewId, tabSearched);
   }
 
+  const logout = () => {
+    localStorage.removeItem('access_token');
+    setLogin(false);
+    setFolder([]);
+  }
 
   return (
     <div>
       <div className="input-group pt-3 pb-2">
         <div className="input-group-prepend">
-          <Dropdown className="ml-2">
-            <Dropdown.Toggle  variant="success" id="dropdown-basic">
-              <Icon.User />
-            </Dropdown.Toggle>
+          {
+            isLogin
+              ? <button
+                  className="btn btn-sm btn-warning ml-2 rounded"
+                  onClick={() => logout()}
+                  ><Icon.LogOut />
+                </button>
 
-            <Dropdown.Menu>
-              <Login loggedIn={() => fetchFolder()}></Login>
-            </Dropdown.Menu>
-          </Dropdown>
-
+              : <Dropdown className="ml-2">
+                  <Dropdown.Toggle  variant="success" id="dropdown-basic">
+                    <Icon.User />
+                  </Dropdown.Toggle>
+      
+                  <Dropdown.Menu>
+                    <Login loggedIn={() => fetchFolder()}></Login>
+                  </Dropdown.Menu>
+                </Dropdown>
+          }
+          
           <Dropdown className="ml-3">
             <Dropdown.Toggle variant="info" id="dropdown-basic" disabled={ isLogin ? false : true }>
               <Icon.Bookmark />
@@ -320,6 +326,7 @@ export default function Main() {
                             <Dropdown.Toggle variant="success" id="dropdown-basic">
                               {`> ${listFolder.name}`}
                             </Dropdown.Toggle>
+                            
                             <Dropdown.Menu className="py-0 rounded-bottom border-0" >
                               <FileBookmark createNew={(url) => handleCreateTab(null, url)} data={listFolder}></FileBookmark>      
                             </Dropdown.Menu>
