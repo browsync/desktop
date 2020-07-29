@@ -39,3 +39,10 @@ export function removeTab(tabId) {
     payload: { tabId },
   })
 }
+
+export function toggleView(viewId) {
+  return ({
+    type: 'TOGGLE_VIEW',
+    payload: { viewId },
+  })
+}

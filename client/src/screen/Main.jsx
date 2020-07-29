@@ -1,15 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import SelectSearch from 'react-select-search';
+import { Collapse } from 'reactstrap';
+import { Dropdown } from "react-bootstrap";
+import * as Icon from 'react-feather';
 import Axios from "axios";
-import Login from "../components/login";
-import {Dropdown} from "react-bootstrap";
+
 import FileBookmark from '../components/table'
 import FormBookmark from "../components/formAddBookmark"
 import FormFolder from "../components/formAddFolder"
-import SelectSearch from 'react-select-search';
-import * as Icon from 'react-feather';
-
-import { createView, removeView, createTab, updateTab, switchTab, removeTab } from '../utils/actions/browser.action';
+import Login from "../components/login";
+import { createView, toggleView, removeView, createTab, updateTab, switchTab, removeTab } from '../utils/actions/browser.action';
 
 const { ipcRenderer } = window.require("electron");
 
@@ -25,20 +26,12 @@ export default function Main() {
   const tabs = useSelector(state => state.browser.tabs);
   const tabActive = useSelector(state => state.browser.tabActive);
   const urlSearchBar = useRef(null);
-  
-  const fetchFolder = () => {
-    Axios({
-      method:'get',
-      url:"http://localhost:5000/folder",
-      headers:{
-        access_token : localStorage.access_token
-      }
-    })
-    .then(({data}) => {
-      setFolder(data);
-      setLogin(true);
-    })
-}
+
+  const [isOpenView, setIsOpenView] = useState(true);
+  const [isOpenBookmark, setIsOpenBookmark] = useState(true);
+  const toggleAllView = () => setIsOpenView(!isOpenView);
+  const toggleView = (viewId) => toggleView(viewId);
+  const toggleBookmark = () => setIsOpenBookmark(!isOpenBookmark);
   
   useEffect(() => {
     if (localStorage.access_token) {
@@ -72,6 +65,20 @@ export default function Main() {
     })
   }, [])
 
+  const fetchFolder = () => {
+    Axios({
+      method:'get',
+      url:"http://localhost:5000/folder",
+      headers:{
+        access_token : localStorage.access_token
+      }
+    })
+    .then(({data}) => {
+      setFolder(data);
+      setLogin(true);
+    })
+  }
+
   const handleSearch = (event) => {
     event.preventDefault();
 
@@ -89,9 +96,7 @@ export default function Main() {
     }
   };
 
-  const handleCreateView = () => {
-    ipcRenderer.send('new-view');
-  }
+  const handleCreateView = () => ipcRenderer.send('new-view');
 
   const handleCreateTab = (viewId, url) => {
     if (!viewId) {
@@ -114,29 +119,18 @@ export default function Main() {
     ipcRenderer.send('remove-tab', { viewId, tabId });
   }
 
-  const goBack = () => {
-    ipcRenderer.send('go-back', { tabId: tabActive.id });
-  }
-
-  const goForward = () => {
-    ipcRenderer.send('go-forward', { tabId: tabActive.id });
-  }
-
-  const goHome = () => {
-    ipcRenderer.send('go-home', { tabId: tabActive.id });
-  }
-
-  const reloadPage = () => {
-    ipcRenderer.send('reload', { tabId: tabActive.id });
-  }
-
+  const goBack = () => ipcRenderer.send('go-back', { tabId: tabActive.id });
+  const goForward = () => ipcRenderer.send('go-forward', { tabId: tabActive.id });
+  const goHome = () => ipcRenderer.send('go-home', { tabId: tabActive.id });
+  const reloadPage = () => ipcRenderer.send('reload', { tabId: tabActive.id });
+  
   const handleToggleSideBar = () => {
     toggleSideBar(!isSideBarActive);
     ipcRenderer.send('toggle-sidebar');
   }
 
   const handleAddToBookmark = (bookmark) => {
-    const folderUpdated = Object.assign({}, folder)
+    const folderUpdated = Object.assign({}, folder);
     folderUpdated.data.forEach((folder, idx) => {
       if (folder.id === bookmark.data.FolderId) {
         folderUpdated.data[idx].Bookmarks.push(bookmark.data);
@@ -148,8 +142,6 @@ export default function Main() {
   const handleAddFolder = (newFolder) => {
     newFolder.data.Bookmarks = [];
     const incomingFolder = {...folder, data: folder.data.concat(newFolder.data)};
-    console.log(folder);
-    console.log(incomingFolder);
     setFolder(incomingFolder);
   }
 
@@ -164,6 +156,7 @@ export default function Main() {
     const tabSearched = JSON.parse(tab);
     handleSwitchTab(tabSearched.viewId, tabSearched);
   }
+
 
   return (
     <div>
@@ -243,15 +236,18 @@ export default function Main() {
                 />
               </li>
 
-              <li className="mt-3 mb-2">
+              <li className="mt-3 mb-2" onClick={toggleAllView}>
                 {'> View Window'}
               </li>
               
+              <Collapse isOpen={isOpenView}>
               {
                 views.map(view => {
                   return (
                     <div key={view.id}>
-                      <li className="mt-2">{`> Window ${view.id + 1}`}</li>
+                      <li className="mt-2" onClick={() => toggleView(view.id)} >{`> Window ${view.id + 1}`}</li>
+
+                      <Collapse isOpen={view.isOpen}>
 
                       <li style={{ display: 'inline' }} key={view.name}>
                         {
@@ -287,45 +283,48 @@ export default function Main() {
                           ><Icon.PlusSquare />
                         </button>
                       </li>
+
+                      </Collapse>
                     </div>
                   )
                 })
               }
+              </Collapse>
 
-              <li className="mt-3 mb-2">
+              <li className="mt-3 mb-2" onClick={toggleBookmark}>
                 {'> Bookmark Window'}
               </li>
 
-              <li>
-                <div>
-                  {folder.data && folder.data.map((listFolder, idx) => {
-                    if(listFolder.FolderId === null){
-                      return (
-                        <Dropdown key={listFolder.id}>
-                          <Dropdown.Toggle variant="success" id="dropdown-basic">
-                            {`> ${listFolder.name}`}
-                          </Dropdown.Toggle>
-                          <Dropdown.Menu>
-                            <FileBookmark createNew={(url) => handleCreateTab(null, url)} data={listFolder}></FileBookmark>      
-                          </Dropdown.Menu>
-                        </Dropdown>
-                      )
-                    }
-                  })}
-                </div>
-              </li>
+              <Collapse isOpen={isOpenBookmark}>
+                <li>
+                    {folder.data && folder.data.map((listFolder, idx) => {
+                      if(listFolder.FolderId === null){
+                        return (
+                          <Dropdown key={listFolder.id}>
+                            <Dropdown.Toggle variant="success" id="dropdown-basic">
+                              {`> ${listFolder.name}`}
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu>
+                              <FileBookmark createNew={(url) => handleCreateTab(null, url)} data={listFolder}></FileBookmark>      
+                            </Dropdown.Menu>
+                          </Dropdown>
+                        )
+                      }
+                    })}
+                </li>
 
-              <li>
-                <Dropdown>
-                  <Dropdown.Toggle variant="info" id="dropdown-basic">
-                    Add Folder
-                  </Dropdown.Toggle>
+                <li>
+                  <Dropdown>
+                    <Dropdown.Toggle variant="info" id="dropdown-basic">
+                      Add Folder
+                    </Dropdown.Toggle>
 
-                  <Dropdown.Menu>
-                    <FormFolder getNewFolder={(newFolder) => handleAddFolder(newFolder)} data={folder}></FormFolder>
-                  </Dropdown.Menu>
-                </Dropdown>
-              </li>
+                    <Dropdown.Menu>
+                      <FormFolder getNewFolder={(newFolder) => handleAddFolder(newFolder)} data={folder}></FormFolder>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                </li>
+              </Collapse>
             </ul>
           </nav>
       }

@@ -21,7 +21,7 @@ const browserReducer = ( state = initialState, { type, payload }) => {
   switch (type) {
     case 'CREATE_VIEW': 
       tabNew = { ...payload, name: `tab-${payload.viewId}.${payload.id}` }
-      viewNew = { id: state.views.length, name: `view-${payload.id}`};
+      viewNew = { id: state.views.length, name: `view-${payload.id}`, isOpen: true };
       return {
         ...state,
         views: state.views.concat(viewNew),
@@ -33,6 +33,15 @@ const browserReducer = ( state = initialState, { type, payload }) => {
     case 'REMOVE_VIEW':
       const viewsFiltered = state.views.filter(view => view.id !== payload.viewId );
       return { ...state, views: viewsFiltered }
+
+    case 'TOGGLE_VIEW':
+      const viewUpdated = Object.assign({}, state.views);
+      viewUpdated.forEach((view, idx) => {
+        if (view.id === payload.viewId) {
+          viewUpdated[idx].isOpen = !viewUpdated[idx].isOpen;
+        }
+      })
+      return { ...state, views: viewUpdated }
 
     case 'CREATE_TAB':
       payload.name = `tab-${payload.viewId}.${payload.id}`;
