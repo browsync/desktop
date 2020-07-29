@@ -1,4 +1,4 @@
-const { app, BrowserView, ipcMain, screen: display } = require("electron");
+const { app, BrowserView, ipcMain, screen: display, Menu } = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
 const { findIndex, sortBy, find, findLast } = require('lodash');
@@ -11,11 +11,51 @@ let iconPath = path.join(app.getAppPath(), '/public/browsync2.ico');
 let searchEngineDefault = 'https://google.com';
 let screen;
 let topBarHeight = 63; // 51
-let sideBarWidth = 450;
+let sideBarWidth = 250;
 let isSideBarActive = true;
-let main;
+let isDevMode = false;
+let devToolsSpace = 500;
 let isViewCreated;
 let isTabCreated;
+
+let main;
+
+const menuTemplate = [
+    {
+        label: 'File',
+        submenu: [
+            {
+                label: 'Toggle Sidebar',
+                accelerator: process.platform === 'darwin' ? 'Command+S' : 'Ctrl+S',
+                click() {
+                    main.webContents.send('shortcut', !isSideBarActive);
+                }
+            },
+            {
+                label: 'Toggle Dev Mode',
+                accelerator: process.platform === 'darwin' ? 'Command+D' : 'Ctrl+D',
+                click() {
+                    if (!isDevMode) {
+                        screen.width -= devToolsSpace;
+                        main.webContents.openDevTools();
+                    } else {
+                        screen.width += devToolsSpace;
+                        main.webContents.closeDevTools();
+                    }
+                    isDevMode = !isDevMode;
+                    resizeViews();
+                }
+            },
+            {
+                label: 'Quit',
+                accelerator: process.platform === 'darwin' ? 'Command+Q' : 'Ctrl+Q',
+                click() {
+                    app.quit();
+                }
+            }
+        ]
+    }
+];
 
 (setupApp = () => {
     app.on("ready", createMain);
@@ -47,8 +87,9 @@ function createMain() {
         : `file://${path.join(__dirname, "../build/index.html")}`
     );
     
-    screen.width -= 400;
-    main.webContents.openDevTools();
+    const mainMenu = Menu.buildFromTemplate(menuTemplate);
+    Menu.setApplicationMenu(mainMenu);
+
     main.on("closed", () => (main = null));
 }
 

@@ -19,7 +19,8 @@ const browserReducer = ( state = initialState, { type, payload }) => {
   let viewNew;
 
   switch (type) {
-    case 'CREATE_VIEW': 
+    case 'CREATE_VIEW':
+      console.log(`Create View: ${payload.viewId}, ${payload.id}`);
       if (!payload.name) payload.name = `tab-${payload.viewId}.${payload.id}`;
       viewNew = { id: state.views.length, name: `view-${payload.id}`, isOpen: true };
       return {
@@ -31,10 +32,12 @@ const browserReducer = ( state = initialState, { type, payload }) => {
       }
 
     case 'REMOVE_VIEW':
+      console.log(`Remove View: ${payload.viewId}`);
       const viewsFiltered = state.views.filter(view => view.id !== payload.viewId );
       return { ...state, views: viewsFiltered }
 
     case 'TOGGLE_VIEW':
+      console.log(`Toggle View: ${payload.viewId}`);
       const viewUpdated = [...state.views];
       viewUpdated.forEach((view, idx) => {
         if (view.id === payload.viewId) {
@@ -44,10 +47,12 @@ const browserReducer = ( state = initialState, { type, payload }) => {
       return { ...state, views: viewUpdated }
 
     case 'CREATE_TAB':
+      console.log(`Create Tab: ${payload.viewId}, ${payload.id}`);
       if (!payload.name) payload.name = `tab-${payload.viewId}.${payload.id}`;
       return { ...state, tabs: state.tabs.concat(payload), tabActive: payload };
 
     case 'UPDATE_TAB':
+      console.log(`Update Tab: ${payload.viewId}, ${payload.id}`);
       if (!payload.name) payload.name = `tab-${payload.viewId}.${payload.id}`;
       tabUpdatedIndex = findIndex(state.tabs, { id: payload.id, viewId: payload.viewId });
       tabsUpdated = [ ...state.tabs ]
@@ -56,11 +61,13 @@ const browserReducer = ( state = initialState, { type, payload }) => {
     
     case 'SWITCH_TAB':
       ({ viewId, tabId } = payload);
+      console.log(`Switch tab: ${viewId}, ${tabId}`);
       viewActive = state.views.find(view => view.id === viewId);
       tabActive = state.tabs.find(tab => tab.id === tabId);
       return { ...state, viewActive: viewActive, tabActive: tabActive };
 
     case 'REMOVE_TAB':
+      console.log(`Remove Tab: ${payload.viewId}, ${payload.id}`);
       const tabsFiltered = state.tabs.filter(tab => tab.id !== payload.tabId );
       return { ...state, tabs: tabsFiltered }
 

@@ -40,7 +40,7 @@ export default function Main() {
     }
 
     ipcRenderer.send('new-view');
-
+    // TODO TAB Update always happen twice
     ipcRenderer.on('tab-history', (_, tabUpdated) => {
       urlSearchBar.current.value = tabUpdated.urlCurrent;
       urlSearchBar.current.focus();
@@ -63,7 +63,13 @@ export default function Main() {
     ipcRenderer.on('remove-view', (_, viewId) => {
       dispatch(removeView(viewId));
     })
+
+    ipcRenderer.on('shortcut', (_, sideBarStatus) => {
+      toggleSideBar(sideBarStatus);
+      ipcRenderer.send('toggle-sidebar');
+    })
   }, [])
+  
 
   const fetchFolder = () => {
     Axios({
@@ -99,7 +105,7 @@ export default function Main() {
   const handleCreateView = () => ipcRenderer.send('new-view');
 
   const handleCreateTab = (viewId, url) => {
-    if (!viewId) {
+    if (!viewId && viewId !== 0) {
       ipcRenderer.send('new-tab', { viewId: tabActive.viewId, url: url });
     } else {
       ipcRenderer.send('new-tab', { viewId });
@@ -125,13 +131,19 @@ export default function Main() {
   const reloadPage = () => ipcRenderer.send('reload', { tabId: tabActive.id });
   
   const handleToggleSideBar = () => {
-    toggleSideBar(!isSideBarActive);
+    if (isSideBarActive) { // TODO SHORTCUT Trigger from Electron
+      console.log(true);
+      toggleSideBar(false);
+    } else {
+      console.log(false);
+      toggleSideBar(true);
+    }
     ipcRenderer.send('toggle-sidebar');
   }
 
   const handleAddToBookmark = (bookmark) => {
-    fetchFolder();
-    console.log(folder);
+    fetchFolder(); // TODO BOOKMARK Add
+    // console.log(folder);
     // const folderUpdated = Object.assign({}, folder);
     // folderUpdated.data.forEach((folder, idx) => {
     //   if (folder.id === bookmark.data.FolderId) {
@@ -142,7 +154,7 @@ export default function Main() {
   };
 
   const handleAddFolder = (newFolder) => {
-    fetchFolder();
+    fetchFolder(); // TODO FOLDER Add
     // newFolder.data.Bookmarks = [];
     // const incomingFolder = {...folder, data: folder.data.concat(newFolder.data)};
     // console.log(incomingFolder);
