@@ -256,7 +256,7 @@ export default function Main() {
                             if (tab.viewId === view.id)
                               return (
                                 <div
-                                  key={tab.name} 
+                                  key={tab.id} 
                                   className="d-flex flex-row"
                                 >
                                   <button 

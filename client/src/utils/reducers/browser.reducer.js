@@ -20,14 +20,15 @@ const browserReducer = ( state = initialState, { type, payload }) => {
 
   switch (type) {
     case 'CREATE_VIEW': 
-      tabNew = { ...payload, name: `tab-${payload.viewId}.${payload.id}` }
+      if (!payload.name) payload.name = `tab-${payload.viewId}.${payload.id}`;
       viewNew = { id: state.views.length, name: `view-${payload.id}`, isOpen: true };
+      console.log(payload);
       return {
         ...state,
         views: state.views.concat(viewNew),
-        tabs: state.tabs.concat(tabNew),
+        tabs: state.tabs.concat(payload),
         viewActive: viewNew,
-        tabActive: tabNew,
+        tabActive: payload,
       }
 
     case 'REMOVE_VIEW':
@@ -44,11 +45,11 @@ const browserReducer = ( state = initialState, { type, payload }) => {
       return { ...state, views: viewUpdated }
 
     case 'CREATE_TAB':
-      payload.name = `tab-${payload.viewId}.${payload.id}`;
+      if (!payload.name) payload.name = `tab-${payload.viewId}.${payload.id}`;
       return { ...state, tabs: state.tabs.concat(payload), tabActive: payload };
 
     case 'UPDATE_TAB':
-      payload.name = `tab-${payload.viewId}.${payload.id}`
+      if (!payload.name) payload.name = `tab-${payload.viewId}.${payload.id}`;
       tabUpdatedIndex = findIndex(state.tabs, { id: payload.id, viewId: payload.viewId });
       tabsUpdated = [ ...state.tabs ]
       tabsUpdated.splice(tabUpdatedIndex, 1, payload);

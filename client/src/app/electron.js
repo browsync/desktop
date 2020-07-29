@@ -2,9 +2,11 @@ const { app, BrowserView, ipcMain, screen: display } = require("electron");
 const isDev = require("electron-is-dev");
 const path = require("path");
 const { findIndex, sortBy, find, findLast } = require('lodash');
+var getTitleFromUrl = require('url-to-title');
 
 const MainWindow = require('./main_window');
 const ViewWindow = require('./view_window');
+
 
 let iconPath = path.join(app.getAppPath(), '/public/browsync2.ico');
 let searchEngineDefault = 'https://google.com';
@@ -76,30 +78,30 @@ function createView() {
             indexCurrent: currentIndex,
             indexLast: history.length - 1,
         };
-        if (isViewCreated) {
-            main.webContents.send('new-view-resp', payload);
-            isViewCreated = false;
-        } else {
-            main.webContents.send('tab-history', payload);
-        }
+        getTitleFromUrl(history[currentIndex]).then((title) => {
+            payload.name = title;
+            if (isViewCreated) {
+                main.webContents.send('new-view-resp', payload);
+                isViewCreated = false;
+            } else {
+                main.webContents.send('tab-history', payload);
+            }
+        })
     })
 }
 
 function resizeViews() {
     const views = main.getBrowserViews();
     const tabs = BrowserView.getAllViews();
-    // TODO VIEWS Resize error when making 3 window & close the first view
-    // console.log(views.length, '\n)
     tabs.map(tab => {
-        // console.log(tab.viewId);
         let viewPosX;
         let viewWidth;
         if (isSideBarActive) {
-            viewPosX = sideBarWidth + ((screen.width - sideBarWidth) / views.length) * tab.viewId;
-            viewWidth = (screen.width - sideBarWidth) / views.length;
-        } else{
-            viewPosX = (screen.width / views.length) * tab.viewId;
-            viewWidth = screen.width / views.length;
+            viewPosX = Math.floor(sideBarWidth + ((screen.width - sideBarWidth) / views.length) * tab.viewId);
+            viewWidth = Math.floor((screen.width - sideBarWidth) / views.length);
+        } else {
+            viewPosX = Math.floor((screen.width / views.length) * tab.viewId);
+            viewWidth = Math.floor(screen.width / views.length);
         }
         tab.setBounds({ 
             x: viewPosX,
@@ -148,12 +150,15 @@ function createTab(viewId, url) {
             indexCurrent: currentIndex,
             indexLast: history.length - 1,
         }
-        if (isTabCreated) {
-            main.webContents.send('new-tab-resp', payload);
-            isTabCreated = false;
-        } else {
-            main.webContents.send('tab-history', payload);
-        }
+        getTitleFromUrl(history[currentIndex]).then((title) => {
+            payload.name = title;
+            if (isTabCreated) {
+                main.webContents.send('new-tab-resp', payload);
+                isTabCreated = false;
+            } else {
+                main.webContents.send('tab-history', payload);
+            }
+        })
     })
 }
 
