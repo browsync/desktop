@@ -100,7 +100,7 @@ export default (props) => {
                         
                       </Dropdown.Toggle>
                       <Dropdown.Menu>
-                        <FileBookmark data={child}></FileBookmark>
+                        <FileBookmark createNew={(url) => props.createNew(url)} data={child}></FileBookmark>
                       </Dropdown.Menu>
                     </Dropdown>
                   </td>

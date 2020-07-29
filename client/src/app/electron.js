@@ -10,7 +10,7 @@ const ViewWindow = require('./view_window');
 let iconPath = path.join(app.getAppPath(), '/public/browsync2.ico');
 let searchEngineDefault = 'https://google.com';
 let screen;
-let topBarHeight = 63; // 51
+let topBarHeight = 63;
 let sideBarWidth = 250;
 let isSideBarActive = true;
 let isDevMode = false;

@@ -240,8 +240,8 @@ export default function Main() {
 
       {
         isSideBarActive && 
-          <nav id="sidebar" className="" style={{ height: '94vh', overflowY: 'auto', overflowX: 'hidden' }} onFocus={updateTabsForSearchOptions}>
-            <div className="sidebar-header">
+          <nav id="sidebar" style={{ height: '94vh', overflowY: 'auto', overflowX: 'hidden' }} onFocus={updateTabsForSearchOptions}>
+            <div className="sidebar-header text-center">
               <button type="button" id="sidebarCollapse" className="btn btn-info">
                 <h3>BrowSync</h3>
                 <strong>BS</strong>
